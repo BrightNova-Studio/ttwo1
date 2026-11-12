@@ -14,9 +14,9 @@
 <body>
 <div class="ambient" aria-hidden="true"><i class="orb o1"></i><i class="orb o2"></i><i class="orb o3"></i><i class="grain"></i></div>
 
-<div id="tip" class="tip" hidden></div>
-
 <main id="gate" class="gate" data-support="{{ $supportEmail }}">
+    <div id="tip" class="tip" hidden></div>
+
     <section class="card" aria-live="polite">
         <div class="brand">
             <span class="mark" aria-hidden="true"><i></i><i></i></span>

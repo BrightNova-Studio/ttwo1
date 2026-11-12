@@ -51,22 +51,28 @@ input, textarea, select { font: inherit; color: inherit; }
 @keyframes drift3 { to { transform: translate(-10vmax, 8vmax) scale(0.8); } }
 
 /* ----------------------------------------------------------------- tip */
+/* The tip lives in the page flow above the card, so it never covers anything. */
 .tip {
-  position: fixed; z-index: 30; top: max(12px, env(safe-area-inset-top)); left: 50%; translate: -50% 0;
-  display: flex; align-items: center; gap: 10px; max-width: min(92vw, 560px);
-  padding: 9px 14px; border-radius: 999px; font-size: 13px; line-height: 1.35;
-  background: rgba(20, 20, 30, 0.8); border: 1px solid var(--line2); backdrop-filter: blur(14px);
-  transition: opacity 0.6s, translate 0.6s var(--ease); animation: dropin 0.7s var(--ease) both;
+  position: relative; z-index: 1; width: min(440px, 100%);
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 8px 9px 14px; border-radius: 14px; font-size: 12.5px; line-height: 1.35;
+  background: rgba(20, 20, 30, 0.7); border: 1px solid var(--line2); backdrop-filter: blur(14px);
+  transition: opacity 0.5s, transform 0.5s var(--ease), max-height 0.5s, margin 0.5s, padding 0.5s;
+  max-height: 120px; animation: dropin2 0.6s var(--ease) both;
 }
+.tip > span:not(.tip-ico) { flex: 1; min-width: 0; }
 .tip.ok { color: var(--ok); border-color: rgba(61, 220, 159, 0.3); }
 .tip.warn { color: #ffd9a0; border-color: rgba(255, 180, 84, 0.3); }
-.tip.warn svg { color: var(--warn); }
-.tip.fade { opacity: 0; translate: -50% -14px; pointer-events: none; }
-.tip svg { flex: none; width: 18px; height: 18px; }
-@keyframes dropin { from { opacity: 0; translate: -50% -16px; } }
+.tip.warn .tip-ico { color: var(--warn); }
+.tip.fade { opacity: 0; transform: translateY(-8px); max-height: 0; padding-top: 0; padding-bottom: 0; margin-bottom: -18px; border-width: 0; pointer-events: none; overflow: hidden; }
+.tip svg { flex: none; width: 17px; height: 17px; }
+.tip-ico { display: grid; place-items: center; }
+.tip-x { flex: none; width: 28px; height: 28px; border-radius: 9px; display: grid; place-items: center; color: inherit; opacity: 0.7; }
+.tip-x:hover { opacity: 1; background: rgba(255, 255, 255, 0.08); }
+.tip-x svg { width: 15px; height: 15px; }
 
 /* ---------------------------------------------------------------- gate */
-.gate { position: relative; z-index: 1; min-height: 100%; display: grid; place-content: center; justify-items: center; gap: 18px; padding: 72px 16px 24px; overflow: auto; }
+.gate { position: relative; z-index: 1; min-height: 100%; display: grid; place-content: center; justify-items: center; gap: 14px; padding: max(20px, env(safe-area-inset-top)) 16px 24px; overflow: auto; }
 .card {
   width: min(440px, 100%); padding: 34px 30px 26px; border-radius: 28px;
   background: linear-gradient(180deg, rgba(24, 24, 36, 0.78), rgba(12, 12, 19, 0.82));
@@ -348,7 +354,7 @@ label { display: block; font-size: 12px; font-weight: 600; letter-spacing: 0.08e
 
 /* --------------------------------------------------------------- mobile */
 @media (max-width: 620px) {
-  .gate { padding-top: 64px; align-content: start; }
+  .gate { align-content: start; padding-top: max(16px, env(safe-area-inset-top)); }
   .card { padding: 28px 22px 22px; border-radius: 24px; }
   h1 { font-size: 24px; }
   .enc-text { display: none; }

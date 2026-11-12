@@ -171,15 +171,20 @@ function onLeave(reason) {
 (async () => {
   const guess = await privateWindowGuess();
   const tip = $('#tip');
+  const dismiss = () => {
+    tip.classList.add('fade');
+    setTimeout(() => { tip.hidden = true; }, 600);
+  };
+  const close = h('button', { class: 'tip-x', type: 'button', 'aria-label': 'Dismiss', onclick: dismiss, html: icon('x') });
   if (guess === 'private') {
     tip.className = 'tip ok';
-    tip.replaceChildren(h('span', { html: icon('shield') }), 'Private window detected. Good.');
+    tip.replaceChildren(h('span', { class: 'tip-ico', html: icon('shield') }), h('span', {}, 'Private window detected. Good.'), close);
     tip.hidden = false;
-    setTimeout(() => { tip.classList.add('fade'); }, 3500);
+    setTimeout(dismiss, 3500);
   } else {
     tip.className = 'tip warn';
-    tip.replaceChildren(h('span', { html: icon('warn') }),
-      h('span', {}, 'For best privacy, open this page in a ', h('b', {}, 'Private / Incognito window'), '. This browser may keep history of the visit.'));
+    tip.replaceChildren(h('span', { class: 'tip-ico', html: icon('warn') }),
+      h('span', {}, 'Tip: use a ', h('b', {}, 'Private / Incognito'), ' window so this browser keeps no history of your visit.'), close);
     tip.hidden = false;
   }
 })();
