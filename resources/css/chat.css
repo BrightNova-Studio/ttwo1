@@ -61,6 +61,8 @@ input, textarea, select { font: inherit; color: inherit; }
   max-height: 120px; animation: dropin2 0.6s var(--ease) both;
 }
 .tip > span:not(.tip-ico) { flex: 1; min-width: 0; }
+.tip.info { color: #cfc8ff; border-color: rgba(124, 108, 255, 0.35); background: rgba(124, 108, 255, 0.08); }
+.tip.info .tip-ico { color: #a99dff; }
 .tip.ok { color: var(--ok); border-color: rgba(61, 220, 159, 0.3); }
 .tip.warn { color: #ffd9a0; border-color: rgba(255, 180, 84, 0.3); }
 .tip.warn .tip-ico { color: var(--warn); }

@@ -46,12 +46,12 @@
     ]
   },
   "resources/js/chat/main.js": {
-    "file": "assets/main-BhafxbnG.js",
+    "file": "assets/main-DHGXDxXf.js",
     "name": "main",
     "src": "resources/js/chat/main.js",
     "isEntry": true,
     "css": [
-      "assets/main-DErrDQbI.css"
+      "assets/main-6I0eRo8p.css"
     ],
     "assets": [
       "assets/inter-cyrillic-ext-wght-normal-BOeWTOD4.woff2",

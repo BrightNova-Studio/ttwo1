@@ -16,7 +16,7 @@ Stack: PHP 8.4, Laravel 13, MySQL/MariaDB in production (SQLite locally), plain 
 | Browser | Strict CSP (nothing third-party), `no-store`, `no-referrer`, no framing, `noindex`. |
 | Extras | Disappearing messages, view-once, unsend, clear chat for both, panic key (Esc Esc), blur on tab switch, idle auto sign-out. |
 
-Limits that no website can remove: a screenshot/camera, malware on a member's device, or a member sharing their IDs and secret phrase. A website also cannot force Incognito mode; the entry page detects it on a best-effort basis and shows a tip.
+Limits that no website can remove: a screenshot/camera, malware on a member's device, or a member sharing their IDs and secret phrase. A website also cannot force Incognito mode; the entry page just shows a short tip to use Incognito / Private mode.
 
 ## Local development
 
