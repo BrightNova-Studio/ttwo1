@@ -100,14 +100,21 @@ export function startChat({ session, key, onExit }) {
   }
   const touch = () => { S.lastActivity = Date.now(); unlockAudio(); };
   const updateTitle = () => { document.title = S.unread ? `(${S.unread}) 1two1` : '1two1'; };
+  // Avatars are a small built-in set (emoji + colour) chosen on the device and sent encrypted, like nicknames.
+  const AV_EMOJI = ['🦊','🐼','🐯','🦁','🐨','🐸','🦄','🐙','🦉','🐧','🐬','🦋','🌙','⭐','🔥','🌈','🍀','🌸','🎧','🎮','🚀','🛡️','💎','👻'];
+  const AV_HUES = [250, 205, 165, 120, 40, 15, 340, 290];
+  const cleanAvatar = (a) => (a && AV_EMOJI.includes(a.e) && Number.isFinite(a.h) ? { e: a.e, h: clamp(Math.round(a.h), 0, 360) } : null);
+  function paintAvatar(el, name, av) {
+    el.textContent = av ? av.e : (name[0] || '?').toUpperCase();
+    el.style.setProperty('--h', av ? av.h : avatarHue(name));
+  }
   const meName = () => S.nick || 'You';
   const theirName = () => S.peerNick || 'Your partner';
 
   function paintPeer(p) {
     const name = theirName();
     peerName.textContent = name;
-    peerAvatar.textContent = (name[0] || '?').toUpperCase();
-    peerAvatar.style.setProperty('--h', avatarHue(S.peerNick || 'partner'));
+    paintAvatar(peerAvatar, name, S.peerAvatar);
     peerAvatar.classList.toggle('on', !!p?.online);
     let status = 'Offline';
     if (!p?.joined) status = "Hasn't joined yet";
@@ -160,7 +167,8 @@ export function startChat({ session, key, onExit }) {
     } else {
       if (m.reply_to) {
         const q = S.msgs.get(m.reply_to);
-        bubble.append(h('div', { class: 'quote' }, h('b', {}, q ? (q.mine ? meName() : theirName()) : 'Message'), h('span', {}, q ? preview(q) : 'Earlier message')));
+        bubble.append(h('button', { class: 'quote', type: 'button', title: 'Go to the original message', onclick: () => jumpTo(m.reply_to) },
+          h('b', {}, q ? (q.mine ? meName() : theirName()) : 'Message'), h('span', {}, q ? preview(q) : 'Earlier message')));
       }
       if (m.text === null) bubble.append(h('span', { class: 'muted-txt' }, 'Could not decrypt. Is the secret phrase the same?'));
       else {
@@ -194,6 +202,39 @@ export function startChat({ session, key, onExit }) {
       lp = setTimeout(() => openMenu(m, el.querySelector('.bubble')), 480);
     });
     ['pointerup', 'pointermove', 'pointercancel'].forEach((ev) => el.addEventListener(ev, () => clearTimeout(lp)));
+
+    // WhatsApp-style: drag a message to the right to reply to it.
+    if (!m.unsent && !m.view_once && typeof m.id === 'number') {
+      const swipeIco = h('span', { class: 'swipe-ico', html: icon('reply') });
+      el.prepend(swipeIco);
+      let x0 = 0, y0 = 0, drag = false, armed = false, id = null;
+      const reset = () => { drag = false; armed = false; id = null; el.classList.remove('swiping'); el.style.setProperty('--sx', '0px'); swipeIco.style.setProperty('--p', '0'); };
+      el.addEventListener('pointerdown', (e) => {
+        if (e.button > 0) return;
+        x0 = e.clientX; y0 = e.clientY; id = e.pointerId; drag = false; armed = false;
+      });
+      el.addEventListener('pointermove', (e) => {
+        if (id !== e.pointerId) return;
+        const dx = e.clientX - x0, dy = e.clientY - y0;
+        if (!drag) {
+          if (Math.abs(dy) > 12 && Math.abs(dy) > Math.abs(dx)) { id = null; return; }
+          if (dx > 14 && dx > Math.abs(dy) * 1.4) { drag = true; el.classList.add('swiping'); try { el.setPointerCapture(e.pointerId); } catch { /* ignore */ } }
+          else return;
+        }
+        const d = clamp(dx, 0, 90);
+        el.style.setProperty('--sx', d + 'px');
+        swipeIco.style.setProperty('--p', String(clamp(d / 60, 0, 1)));
+        if (d >= 60 && !armed) { armed = true; if (navigator.vibrate) navigator.vibrate(12); }
+        if (d < 60) armed = false;
+      });
+      el.addEventListener('pointerup', (e) => {
+        if (id !== e.pointerId) return;
+        const fire = drag && armed;
+        reset();
+        if (fire) setReply(m);
+      });
+      el.addEventListener('pointercancel', reset);
+    }
     return el;
   }
 
@@ -329,6 +370,7 @@ export function startChat({ session, key, onExit }) {
       S.peerNickEnc = p.nick_enc;
       const n = await dec(p.nick_enc);
       S.peerNick = (n && n.n) || '';
+      S.peerAvatar = cleanAvatar(n && n.a);
     }
     if (S.peerSessions === null) S.peerSessions = p.sessions;
     else if (p.sessions > S.peerSessions) {
@@ -406,6 +448,14 @@ export function startChat({ session, key, onExit }) {
     ta.style.height = 'auto';
     ta.style.height = clamp(ta.scrollHeight, 24, 140) + 'px';
     btnSend.disabled = !ta.value.trim();
+  }
+
+  function jumpTo(id) {
+    const target = S.els.get(id);
+    if (!target) { toast('That message is no longer here.'); return; }
+    target.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    target.classList.add('flash');
+    setTimeout(() => target.classList.remove('flash'), 1300);
   }
 
   function setReply(m) {
@@ -644,13 +694,30 @@ export function startChat({ session, key, onExit }) {
   }
 
   function buildDrawer() {
+    const saveProfile = async (msg) => {
+      try {
+        await api('POST', '/profile', { nick_enc: (S.nick || S.avatar) ? await C.seal(key, { n: S.nick, a: S.avatar }) : null });
+        toast(msg);
+      } catch (e) { if (!authFail(e)) toast('Could not save that.', 'warn'); }
+    };
+    const preview = h('div', { class: 'avatar big' });
+    const paintMine = () => paintAvatar(preview, S.nick || 'You', S.avatar);
+    const pickEmoji = (e) => { S.avatar = { e, h: S.avatar ? S.avatar.h : AV_HUES[0] }; paintMine(); saveProfile('Picture saved'); };
+    const pickHue = (hue) => { S.avatar = { e: S.avatar ? S.avatar.e : AV_EMOJI[0], h: hue }; paintMine(); saveProfile('Picture saved'); };
+    const clearAvatar = () => { S.avatar = null; paintMine(); saveProfile('Picture removed'); };
+    paintMine();
+    const avatarSection = h('section', {},
+      h('h4', {}, 'Your picture'),
+      h('p', { class: 'hint' }, 'Pick an emoji and a colour. Your partner sees it next to your name. It is encrypted too, and no photo is ever uploaded.'),
+      h('div', { class: 'av-row' }, preview, h('div', { class: 'av-hues' }, AV_HUES.map((hue) => h('button', { class: 'av-hue', type: 'button', 'aria-label': 'Colour', vars: { '--h': hue }, onclick: () => pickHue(hue) })))),
+      h('div', { class: 'av-grid' }, AV_EMOJI.map((e) => h('button', { class: 'av-opt', type: 'button', onclick: () => pickEmoji(e) }, e))),
+      h('button', { class: 'btn ghost sm', type: 'button', onclick: clearAvatar }, 'Use my initial'));
+
     const nickIn = h('input', { class: 'text-input', type: 'text', maxlength: '24', placeholder: 'Choose a nickname', value: S.nick, autocomplete: 'off', spellcheck: 'false', 'aria-label': 'Your nickname' });
     const saveNick = async () => {
       S.nick = nickIn.value.trim().slice(0, 24);
-      try {
-        await api('POST', '/profile', { nick_enc: S.nick ? await C.seal(key, { n: S.nick }) : null });
-        toast(S.nick ? 'Nickname saved' : 'Nickname removed');
-      } catch (e) { if (!authFail(e)) toast('Could not save nickname.', 'warn'); }
+      paintMine();
+      await saveProfile(S.nick ? 'Nickname saved' : 'Nickname removed');
     };
     nickIn.addEventListener('keydown', (e) => e.key === 'Enter' && saveNick());
 
@@ -669,6 +736,7 @@ export function startChat({ session, key, onExit }) {
       h('div', { class: 'drawer-body' },
         h('section', {}, h('h4', {}, 'Your nickname'), h('p', { class: 'hint' }, `You are Member ${S.slot}. Your partner sees this name. It is encrypted too.`),
           h('div', { class: 'inline' }, nickIn, h('button', { class: 'btn primary sm', type: 'button', onclick: saveNick }, 'Save'))),
+        avatarSection,
         h('section', {}, h('h4', {}, 'Disappearing messages'), h('p', { class: 'hint' }, 'New messages vanish for both of you after this time.'),
           h('div', { class: 'segs' }, choiceBtns.map(([, b]) => b))),
         h('section', {}, h('h4', {}, 'Privacy'),
@@ -779,6 +847,7 @@ export function startChat({ session, key, onExit }) {
   (async () => {
     const mine = await dec(session.nick_enc);
     S.nick = (mine && mine.n) || '';
+    S.avatar = cleanAvatar(mine && mine.a);
     buildDrawer();
     paintPeer(session.peer);
     updateTitle();

@@ -416,3 +416,31 @@ label { display: block; font-size: 12px; font-weight: 600; letter-spacing: 0.08e
   .creds2 code { font-size: 21px; }
 }
 .room-life { margin-top: 12px; font-size: 12.5px; color: var(--dim); max-width: 340px; }
+
+/* ------------------------------------------------------------- avatars */
+.avatar.big { width: 64px; height: 64px; font-size: 28px; }
+.avatar.big::after { display: none; }
+.av-row { display: flex; align-items: center; gap: 16px; margin: 10px 0 14px; }
+.av-hues { display: flex; flex-wrap: wrap; gap: 8px; }
+.av-hue { width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, hsl(var(--h) 75% 58%), hsl(calc(var(--h) + 50) 80% 45%)); border: 2px solid rgba(255, 255, 255, 0.15); transition: transform 0.15s var(--ease), border-color 0.2s; }
+.av-hue:hover { transform: scale(1.12); border-color: #fff; }
+.av-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; margin-bottom: 12px; }
+.av-opt { aspect-ratio: 1; border-radius: 12px; font-size: 21px; line-height: 1; display: grid; place-items: center; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--line); transition: transform 0.15s var(--ease), background 0.2s; }
+.av-opt:hover { background: rgba(124, 108, 255, 0.22); transform: scale(1.08); }
+@media (max-width: 420px) { .av-grid { grid-template-columns: repeat(6, 1fr); } }
+
+/* ------------------------------------------------ ticks & swipe-to-reply */
+.tick { color: #8b8ba3; }                                   /* sent / delivered: grey */
+.tick svg { width: 16px; height: 16px; }
+.tick.seen { color: #34b7f1; filter: drop-shadow(0 0 5px rgba(52, 183, 241, 0.55)); } /* seen: blue */
+.list { overflow-x: hidden; }
+.msg { position: relative; touch-action: pan-y; }
+.msg .row { transform: translateX(var(--sx, 0px)); transition: transform 0.22s var(--ease); }
+.msg.swiping .row { transition: none; }
+.msg.swiping { user-select: none; }
+.swipe-ico { position: absolute; left: 4px; top: 8px; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; color: #fff; background: rgba(124, 108, 255, 0.55); opacity: var(--p, 0); transform: scale(calc(0.5 + var(--p, 0) * 0.5)); pointer-events: none; }
+.swipe-ico svg { width: 17px; height: 17px; }
+button.quote { text-align: left; width: 100%; color: inherit; cursor: pointer; border-top: 0; border-right: 0; border-bottom: 0; }
+button.quote:hover { background: rgba(0, 0, 0, 0.32); }
+.msg.flash .bubble { animation: flashmsg 1.2s ease; }
+@keyframes flashmsg { 0%, 60% { box-shadow: 0 0 0 3px rgba(255, 220, 120, 0.85); } 100% { box-shadow: none; } }

@@ -28,7 +28,7 @@
     "src": "node_modules/@fontsource-variable/inter/files/inter-vietnamese-wght-normal.woff2"
   },
   "resources/css/info.css": {
-    "file": "assets/info-SVnVmnjK.css",
+    "file": "assets/info-R0Aeo8dT.css",
     "name": "info",
     "names": [
       "info.css"
@@ -46,7 +46,7 @@
     ]
   },
   "resources/css/operator.css": {
-    "file": "assets/operator-hXD-1zx1.css",
+    "file": "assets/operator-CztfWfHY.css",
     "name": "operator",
     "names": [
       "operator.css"
@@ -64,12 +64,12 @@
     ]
   },
   "resources/js/chat/main.js": {
-    "file": "assets/main-BPhrOvvL.js",
+    "file": "assets/main-B-Wa4HbF.js",
     "name": "main",
     "src": "resources/js/chat/main.js",
     "isEntry": true,
     "css": [
-      "assets/main-BRY7tz-d.css"
+      "assets/main-CcaZaqEn.css"
     ],
     "assets": [
       "assets/inter-cyrillic-ext-wght-normal-BOeWTOD4.woff2",
