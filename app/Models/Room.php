@@ -10,7 +10,13 @@ class Room extends Model
 {
     protected $guarded = [];
 
-    protected $casts = ['last_activity_at' => 'datetime', 'expires_at' => 'datetime'];
+    protected $casts = ['last_activity_at' => 'datetime', 'last_active_at' => 'datetime', 'expires_at' => 'datetime'];
+
+    /** When this room will be deleted if nobody comes back. */
+    public function dueAt(): \Illuminate\Support\Carbon
+    {
+        return ($this->last_active_at ?? $this->created_at)->copy()->addSeconds(\App\Support\RoomLifecycle::seconds($this->mode));
+    }
 
     public function members(): HasMany
     {

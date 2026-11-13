@@ -354,6 +354,142 @@ class PrivateChatTest extends TestCase
         $this->assertSame(0, Room::count());
     }
 
+    /* ------------------------------------------------------ modes & expiry */
+
+    private function selfRoom(string $mode = 'temp'): array
+    {
+        $r = $this->postJson('/api/rooms', ['mode' => $mode])->assertCreated()->json();
+
+        return [$r['key'], $r['you'], $r['partner']];
+    }
+
+    public function test_anyone_can_create_a_temp_or_long_room_and_both_members_get_in(): void
+    {
+        [$key, $you, $partner] = $this->selfRoom('temp');
+        $this->assertMatchesRegularExpression('/^[A-Z]{2}-\d{4}$/', $key);
+        $this->assertNotSame($you, $partner);
+        $this->enter($key, $you)->assertOk();
+        $this->enter($key, $partner)->assertOk();
+
+        [$k2] = $this->selfRoom('long');
+        $this->assertSame(['temp', 'long'], Room::orderBy('id')->pluck('mode')->all());
+        $this->assertSame(2, \App\Models\RoomEvent::where('event', 'created')->where('source', 'self')->count());
+        $this->assertNotSame($key, $k2);
+        $this->postJson('/api/rooms', ['mode' => 'forever'])->assertStatus(422);
+    }
+
+    public function test_self_service_codes_are_only_stored_as_hashes(): void
+    {
+        [$key, $you] = $this->selfRoom();
+        $room = Room::first();
+        $dump = json_encode([$room->getAttributes(), $room->members()->get()->map->getAttributes()]);
+        $this->assertStringNotContainsString(Ids::normalize($key), $dump);
+        $this->assertStringNotContainsString(Ids::normalize($you), $dump);
+    }
+
+    public function test_temp_room_is_deleted_30_minutes_after_both_are_away_and_counted_once(): void
+    {
+        [$key, $you] = $this->selfRoom('temp');
+        $room = Room::first();
+        $this->travel(29)->minutes();
+        \App\Support\RoomLifecycle::sweep();
+        $this->assertSame(1, Room::count(), 'still alive at 29 minutes');
+
+        $this->travel(2)->minutes();
+        $this->assertSame(1, \App\Support\RoomLifecycle::sweep());
+        $this->assertSame(0, Room::count());
+        $this->assertSame(0, \App\Models\Member::count());
+        $this->assertSame(1, \App\Models\RoomEvent::where('event', 'expired')->where('mode', 'temp')->count());
+        $this->enter($key, $you)->assertStatus(401);
+    }
+
+    public function test_signing_in_resets_the_clock_and_a_long_room_outlives_a_temp_room(): void
+    {
+        [$key, $you] = $this->selfRoom('temp');
+        [$lkey] = $this->selfRoom('long');
+
+        $this->travel(20)->minutes();
+        $token = $this->enter($key, $you)->assertOk()->json('token');   // clock resets here
+        \App\Support\RoomLifecycle::sweep();
+        $this->assertSame(2, Room::count(), 'temp room survived because of the sign-in, long room is untouched');
+
+        // Staying online (polling) keeps the room alive far past 30 minutes.
+        for ($i = 0; $i < 40; $i++) {
+            $this->travel(1)->minutes();
+            $this->getJson('/api/poll', $this->as($token))->assertOk();
+            \App\Support\RoomLifecycle::sweep();
+        }
+        $this->assertSame(2, Room::count());
+
+        // Both away: 29 minutes later it is still there, 2 more and it is gone.
+        $this->travel(29)->minutes();
+        \App\Support\RoomLifecycle::sweep();
+        $this->assertSame(2, Room::count());
+        $this->travel(2)->minutes();
+        \App\Support\RoomLifecycle::sweep();
+        $this->assertSame(['long'], Room::pluck('mode')->all());
+
+        $this->travel(31)->days();
+        \App\Support\RoomLifecycle::sweep();
+        $this->assertSame(0, Room::count());
+        $this->assertSame(1, \App\Models\RoomEvent::where('event', 'expired')->where('mode', 'long')->count());
+    }
+
+    public function test_knocking_on_a_lapsed_room_deletes_it_even_without_the_scheduler(): void
+    {
+        [$key, $you] = $this->selfRoom('temp');
+        $this->travel(45)->minutes();
+        $this->enter($key, $you)->assertStatus(401);
+        $this->assertSame(0, Room::count());
+    }
+
+    public function test_room_creation_is_rate_limited_per_ip(): void
+    {
+        for ($i = 0; $i < (int) config('chat.create_per_hour'); $i++) {
+            $this->postJson('/api/rooms', ['mode' => 'temp'])->assertCreated();
+        }
+        $this->postJson('/api/rooms', ['mode' => 'temp'])->assertStatus(429);
+    }
+
+    public function test_operator_statistics_count_creations_expiries_and_removals_without_content(): void
+    {
+        $op = User::factory()->create();
+        $this->selfRoom('temp');
+        $this->selfRoom('long');
+        $this->travel(31)->minutes();
+        \App\Support\RoomLifecycle::sweep();                              // temp room expires
+        $long = Room::first();
+        $this->actingAs($op)->delete("/operator/rooms/{$long->id}")->assertRedirect();
+
+        $r = $this->actingAs($op)->get('/operator/stats?range=7d')->assertOk();
+        $r->assertSeeInOrder(['Rooms created', '2']);
+        $this->assertSame(1, \App\Models\RoomEvent::where('event', 'expired')->count());
+        $this->assertSame(1, \App\Models\RoomEvent::where('event', 'removed')->count());
+        $this->actingAs($op)->get('/operator/stats?range=custom&from='.now()->subDays(3)->toDateString().'&to='.now()->toDateString())->assertOk();
+        $this->actingAs($op)->get('/operator/stats?range=custom&from=2026-01-10&to=2026-01-01')->assertSessionHasErrors('to');
+        auth()->logout();
+        $this->get('/operator/stats')->assertRedirect();
+    }
+
+    public function test_operator_can_block_a_member_created_room(): void
+    {
+        $op = User::factory()->create();
+        [$key, $you] = $this->selfRoom('long');
+        $room = Room::first();
+        $this->actingAs($op)->post("/operator/rooms/{$room->id}/toggle")->assertRedirect();
+        $this->enter($key, $you)->assertStatus(401);
+    }
+
+    public function test_explainer_pages_render_and_set_no_cookie(): void
+    {
+        foreach (['/how-it-works', '/temp-vs-long', '/privacy', '/faq'] as $url) {
+            $r = $this->get($url)->assertOk();
+            $this->assertCount(0, $r->headers->getCookies());
+        }
+        $this->get('/temp-vs-long')->assertSee('30 minutes')->assertSee('30 days');
+        $this->get('/')->assertSee('Secret Room Key')->assertSee('Create a room')->assertSee('/privacy', false);
+    }
+
     public function test_ids_are_short_and_memorable(): void
     {
         for ($i = 0; $i < 50; $i++) {

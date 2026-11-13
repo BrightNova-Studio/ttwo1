@@ -6,8 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\Member;
 use App\Models\OperatorLog;
 use App\Models\Room;
+use App\Models\RoomEvent;
 use App\Models\User;
 use App\Support\Ids;
+use App\Support\RoomLifecycle;
+use Illuminate\Support\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -22,8 +25,80 @@ use Illuminate\Validation\Rule;
  */
 class OperatorController extends Controller
 {
+    /** Usage statistics for a period. Counts only: rooms are hard-deleted and carry no content here. */
+    public function stats(Request $request)
+    {
+        $range = $request->query('range', '7d');
+        $tz = config('app.timezone');
+        $to = now()->endOfDay();
+
+        if ($range === 'custom') {
+            $request->validate(['from' => ['required', 'date'], 'to' => ['required', 'date', 'after_or_equal:from']]);
+            $from = Carbon::parse($request->query('from'), $tz)->startOfDay();
+            $to = Carbon::parse($request->query('to'), $tz)->endOfDay();
+            if ($from->diffInDays($to) > 400) {
+                $from = $to->copy()->subDays(400)->startOfDay();
+            }
+        } else {
+            $days = ['today' => 1, '7d' => 7, '30d' => 30, '90d' => 90, '365d' => 365][$range] ?? 7;
+            $range = isset(['today' => 1, '7d' => 7, '30d' => 30, '90d' => 90, '365d' => 365][$range]) ? $range : '7d';
+            $from = now()->subDays($days - 1)->startOfDay();
+        }
+
+        $events = RoomEvent::whereBetween('created_at', [$from, $to])->get(['event', 'mode', 'source', 'created_at']);
+        $count = fn (string $event, ?string $mode = null) => $events->where('event', $event)
+            ->when($mode, fn ($c) => $c->where('mode', $mode))->count();
+
+        // One bar per day (per month when the period is long).
+        $byMonth = $from->diffInDays($to) > 92;
+        $fmt = $byMonth ? 'Y-m' : 'Y-m-d';
+        $series = [];
+        for ($d = $from->copy(); $d->lte($to); $byMonth ? $d->addMonthNoOverflow()->startOfMonth() : $d->addDay()) {
+            $series[$d->format($fmt)] = ['label' => $d->format($byMonth ? 'M Y' : 'd M'), 'created' => 0, 'expired' => 0, 'removed' => 0];
+        }
+        foreach ($events as $e) {
+            $k = $e->created_at->timezone($tz)->format($fmt);
+            if (isset($series[$k])) {
+                $series[$k][$e->event]++;
+            }
+        }
+
+        $rooms = Room::with('members')->get();
+        $liveNow = $rooms->filter(fn ($r) => $r->members->contains(fn ($m) => $m->isOnline()));
+
+        return view('operator.stats', [
+            'range' => $range,
+            'from' => $from,
+            'to' => $to,
+            'byMonth' => $byMonth,
+            'series' => array_values($series),
+            'period' => [
+                'created' => $count('created'),
+                'created_temp' => $count('created', 'temp'),
+                'created_long' => $count('created', 'long'),
+                'created_self' => $events->where('event', 'created')->where('source', 'self')->count(),
+                'created_operator' => $events->where('event', 'created')->where('source', 'operator')->count(),
+                'expired' => $count('expired'),
+                'expired_temp' => $count('expired', 'temp'),
+                'expired_long' => $count('expired', 'long'),
+                'removed' => $count('removed'),
+            ],
+            'now' => [
+                'active' => $rooms->where('status', 'active')->count(),
+                'temp' => $rooms->where('mode', 'temp')->count(),
+                'long' => $rooms->where('mode', 'long')->count(),
+                'blocked' => $rooms->where('status', 'disabled')->count(),
+                'live' => $liveNow->count(),
+                'paired' => $rooms->filter(fn ($r) => $r->members->whereNotNull('joined_at')->count() === 2)->count(),
+                'locked' => $rooms->filter(fn ($r) => $r->key_check !== null)->count(),
+            ],
+            'ttl' => ['temp' => RoomLifecycle::seconds('temp'), 'long' => RoomLifecycle::seconds('long')],
+        ]);
+    }
+
     public function index()
     {
+        RoomLifecycle::sweepSoon();
         $rooms = Room::with('members')->latest('id')->get();
 
         return view('operator.dashboard', [
@@ -33,6 +108,9 @@ class OperatorController extends Controller
                 'active' => $rooms->where('status', 'active')->count(),
                 'disabled' => $rooms->where('status', 'disabled')->count(),
                 'live' => $rooms->filter(fn ($r) => $r->members->contains(fn ($m) => $m->isOnline()))->count(),
+                'temp' => $rooms->where('mode', 'temp')->count(),
+                'long' => $rooms->where('mode', 'long')->count(),
+                'today' => RoomEvent::where('event', 'created')->where('created_at', '>=', now()->startOfDay())->count(),
             ],
             'supportEmail' => config('chat.support_email'),
         ]);
@@ -56,7 +134,11 @@ class OperatorController extends Controller
                 'disappear_seconds' => $data['disappear_seconds'] ?? 0,
                 'expires_at' => $data['expires_at'] ?? null,
                 'created_by' => Auth::id(),
+                'mode' => 'long',
+                'source' => 'operator',
+                'last_active_at' => now(),
             ]);
+            RoomEvent::record('created', 'long', 'operator');
             $room->members()->create(['slot' => 1, 'id_hash' => Ids::hash($m1)]);
             $room->members()->create(['slot' => 2, 'id_hash' => Ids::hash($m2)]);
 
@@ -144,7 +226,7 @@ class OperatorController extends Controller
 
         $room->mutate(function () use ($room, $chatId, $m1, $m2) {
             $room->messages()->delete();
-            $room->update(['chat_hash' => Ids::hash($chatId), 'key_check' => null, 'status' => 'active']);
+            $room->update(['chat_hash' => Ids::hash($chatId), 'key_check' => null, 'status' => 'active', 'last_active_at' => now()]);
             Room::whereKey($room->id)->increment('epoch');
             foreach ([1 => $m1, 2 => $m2] as $slot => $id) {
                 Member::where('room_id', $room->id)->where('slot', $slot)->update([
@@ -190,6 +272,7 @@ class OperatorController extends Controller
     public function destroy(Room $room): RedirectResponse
     {
         $this->log('room.deleted', $room);
+        RoomEvent::record('removed', $room->mode, $room->source);
         $room->delete();
 
         return redirect()->route('operator.dashboard')->with('ok', 'Room deleted.');

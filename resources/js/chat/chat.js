@@ -56,7 +56,7 @@ export function startChat({ session, key, onExit }) {
   const header = h('header', { class: 'top' },
     h('div', { class: 'peer' }, peerAvatar, h('div', { class: 'peer-text' }, peerName, peerStatus)),
     h('div', { class: 'top-actions' },
-      h('div', { class: 'enc-badge', title: 'Messages are encrypted on this device before they are sent. The server and the operator only see scrambled data.' },
+      h('div', { class: 'enc-badge', title: 'Messages are encrypted on this device before they are sent. The server only sees scrambled data.' },
         h('span', { html: icon('lock') }), h('span', { class: 'enc-text' }, 'End-to-end encrypted')),
       h('button', { class: 'icon-btn', type: 'button', title: 'Hide now (press Esc twice)', 'aria-label': 'Hide now', onclick: () => exit('hidden'), html: icon('eyeoff') }),
       h('button', { class: 'icon-btn', type: 'button', title: 'Room settings', 'aria-label': 'Room settings', onclick: () => toggleDrawer(true), html: icon('sliders') })));
@@ -64,7 +64,7 @@ export function startChat({ session, key, onExit }) {
   const empty = h('div', { class: 'empty' },
     h('div', { class: 'empty-orb', html: icon('shield') }),
     h('h3', {}, 'Your private room is ready'),
-    h('p', {}, 'Messages are encrypted before they leave this device. Nobody else, including the operator, can read them.'));
+    h('p', {}, 'Messages are encrypted before they leave this device. Nobody else, including us, can read them.'));
 
   const list = h('section', { class: 'list', 'aria-live': 'polite', 'aria-label': 'Messages' }, empty);
   const jump = h('button', { class: 'jump', type: 'button', hidden: true, onclick: () => scrollBottom(true) }, h('span', { html: icon('arrowdown') }), h('span', { class: 'jump-n' }));
@@ -675,7 +675,7 @@ export function startChat({ session, key, onExit }) {
           h('button', { class: 'btn danger-ghost block', type: 'button', onclick: clearChat }, h('span', { html: icon('trash') }), 'Clear chat for both'),
           h('button', { class: 'btn ghost block', type: 'button', onclick: () => exit('left') }, h('span', { html: icon('logout') }), 'Leave the room')),
         h('div', { class: 'enc-card' }, h('span', { html: icon('shield') }),
-          h('p', {}, 'AES-256 encryption with a key made from your shared secret on this device. The server, the host and the operator only store scrambled data they cannot open.'))));
+          h('p', {}, 'AES-256 encryption with a key made from your shared secret on this device. The server and the host only store scrambled data they cannot open.'))));
   }
 
   function toggleDrawer(open) {

@@ -7,6 +7,7 @@ use App\Models\Member;
 use App\Models\Message;
 use App\Models\Room;
 use App\Support\Ids;
+use App\Support\RoomLifecycle;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -22,7 +23,15 @@ class ChatController extends Controller
 {
     public function page()
     {
-        return view('chat', ['supportEmail' => config('chat.support_email')]);
+        RoomLifecycle::sweepSoon();
+
+        return view('chat', [
+            'supportEmail' => config('chat.support_email'),
+            'modes' => [
+                'temp' => (int) config('chat.modes.temp.seconds'),
+                'long' => (int) config('chat.modes.long.seconds'),
+            ],
+        ]);
     }
 
     /* ---------------------------------------------------------------- sign in */
@@ -49,6 +58,11 @@ class ChatController extends Controller
         }
 
         $room = Room::where('chat_hash', $chatHash)->first();
+        if ($room && RoomLifecycle::lapsed($room)) {
+            RoomLifecycle::expire($room); // nobody was around for too long: it is gone for good
+            $room = null;
+        }
+        RoomLifecycle::sweepSoon();
         $memberHash = Ids::hash($data['member_id']);
         $member = $room?->members->first(fn (Member $m) => hash_equals($m->id_hash, $memberHash));
 
@@ -70,6 +84,7 @@ class ChatController extends Controller
         Cache::forget($failKey);
 
         $token = Ids::token();
+        Room::whereKey($room->id)->update(['last_active_at' => now()]);
         $member->update([
             'token_hash' => Ids::tokenHash($token),
             'sessions' => $member->sessions + 1,

@@ -1,0 +1,8 @@
+/* Shared brand: the two-rings-and-keyhole mark and the 1two1 wordmark. */
+.brand-lockup { display: inline-flex; align-items: center; gap: 10px; }
+.logo { width: 46px; height: 29px; flex: none; overflow: visible; filter: drop-shadow(0 0 10px rgba(110, 100, 255, 0.55)); }
+.word { display: inline-flex; align-items: baseline; font-size: 24px; line-height: 1; letter-spacing: -0.02em; }
+.word i { font-style: normal; font-weight: 800; background: linear-gradient(135deg, #b3a8ff, #5ab9ff); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.word em { font-style: normal; font-weight: 300; letter-spacing: 0.16em; margin: 0 0.12em 0 0.16em; font-size: 0.74em; text-transform: lowercase; color: #e3e3f4; }
+.brand-lockup.big .logo { width: 64px; height: 40px; }
+.brand-lockup.big .word { font-size: 34px; }

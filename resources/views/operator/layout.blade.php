@@ -7,7 +7,7 @@
     <meta name="robots" content="noindex, nofollow, noarchive">
     <meta name="referrer" content="no-referrer">
     <title>@yield('title', 'Console') · 1two1</title>
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%2308080c'/%3E%3Ccircle cx='12.5' cy='16' r='7' fill='none' stroke='%238b7bff' stroke-width='2.4'/%3E%3Ccircle cx='19.5' cy='16' r='7' fill='none' stroke='%2346b0ff' stroke-width='2.4'/%3E%3C/svg%3E">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     @vite(['resources/css/operator.css', 'resources/js/operator.js'])
 </head>
 <body>
@@ -16,11 +16,11 @@
 @auth
 <header class="bar">
     <a class="brand" href="{{ route('operator.dashboard') }}">
-        <span class="mark" aria-hidden="true"><i></i><i></i></span>
-        <span class="word">1two1</span><span class="tag">Console</span>
+        @include('partials.brand', ['u' => 'o'])<span class="tag">Console</span>
     </a>
     <nav>
         <a href="{{ route('operator.dashboard') }}" @class(['on' => request()->routeIs('operator.dashboard')])>Rooms</a>
+        <a href="{{ route('operator.stats') }}" @class(['on' => request()->routeIs('operator.stats')])>Statistics</a>
         <a href="{{ route('operator.logs') }}" @class(['on' => request()->routeIs('operator.logs')])>Activity</a>
         <a href="{{ route('operator.settings') }}" @class(['on' => request()->routeIs('operator.settings')])>Settings</a>
     </nav>

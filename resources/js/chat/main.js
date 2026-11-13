@@ -3,7 +3,7 @@ import * as C from './crypto.js';
 import { api, setToken } from './api.js';
 import { startChat } from './chat.js';
 import { icon } from './icons.js';
-import { $, $$, h, unlockAudio } from './util.js';
+import { $, $$, h, toast, unlockAudio } from './util.js';
 
 const gate = $('#gate');
 const support = gate.dataset.support;
@@ -15,8 +15,8 @@ const SECRET_MIN = 10;
 const S = { chatId: '', memberId: '', session: null };
 
 /* ---------------------------------------------------------- support link */
-$('#support-link').href = 'mailto:' + support + '?subject=' + encodeURIComponent('1two1: request for a new chat ID') +
-  '&body=' + encodeURIComponent('Hello,\n\nI would like a new private chat room (Chat ID and two Member IDs).\n\nThank you.');
+$('#support-link').href = 'mailto:' + support + '?subject=' + encodeURIComponent('1two1: help with my room') +
+  '&body=' + encodeURIComponent('Hello,\n\nI need help with 1two1.\n\n(Please do not send your secret phrase, Secret Room Key or Pass Codes.)\n\nThank you.');
 
 /* ---------------------------------------------------- masked text inputs */
 // A masked text field (instead of type=password) keeps browsers from offering to save these values.
@@ -33,7 +33,7 @@ $$('.eye').forEach((b) => {
 });
 
 /* ------------------------------------------------------------ id helpers */
-// Chat ID = 2 letters + 4 digits (KR-4821). Member ID = 6 digits (482-913).
+// Secret Room Key = 2 letters + 4 digits (KR-4821). Pass Code = 6 digits (482-913).
 const cleanChat = (v) => {
   const s = String(v).toUpperCase().replace(/[^A-Z0-9]/g, '');
   return (s.slice(0, 2).replace(/[^A-Z]/g, '') + s.slice(2).replace(/[^0-9]/g, '')).slice(0, 6);
@@ -45,7 +45,26 @@ $('#chatId').addEventListener('input', (e) => { e.target.value = groupChat(e.tar
 $('#memberId').addEventListener('input', (e) => { e.target.value = groupMember(e.target.value); });
 
 /* ----------------------------------------------------------------- steps */
+/* ---------------------------------------------------------------- panes */
+const panes = { join: $('#pane-join'), new: $('#pane-new'), made: $('#pane-made') };
+const tabs = { join: $('#tab-join'), new: $('#tab-new') };
+function showPane(name, focus = true) {
+  Object.entries(panes).forEach(([k, p]) => { p.hidden = k !== name; });
+  $('#tabs').hidden = name === 'made';
+  Object.entries(tabs).forEach(([k, t]) => {
+    const on = (k === 'join') === (name === 'join');
+    t.classList.toggle('on', on);
+    t.setAttribute('aria-selected', String(on));
+  });
+  $$('.err').forEach((e) => { e.textContent = ''; });
+  if (focus && name === 'join') setTimeout(() => $('input', $('.step.on', panes.join))?.focus(), 60);
+}
+tabs.join.addEventListener('click', () => showPane('join'));
+tabs.new.addEventListener('click', () => showPane('new'));
+$$('[data-ico]').forEach((el) => { el.innerHTML = icon(el.dataset.ico); });
+
 function go(n, focus = true) {
+  showPane('join', false);
   Object.entries(steps).forEach(([k, f]) => f.classList.toggle('on', Number(k) === n));
   dots.forEach((d, i) => d.classList.toggle('on', i < n));
   $$('.err').forEach((e) => { e.textContent = ''; });
@@ -73,27 +92,32 @@ $$('[data-back]').forEach((b) => b.addEventListener('click', () => {
   go(Number(b.dataset.back));
 }));
 
+/** Sign in with S.chatId / S.memberId, then ask for the secret phrase. */
+async function signIn() {
+  const r = await api('POST', '/enter', { chat_id: S.chatId, member_id: S.memberId });
+  setToken(r.token);
+  S.session = r;
+  $('#secret-hint').textContent = r.key_check
+    ? 'Enter the secret phrase you and your partner agreed on. It is checked on this device only.'
+    : 'You are the first one in. Choose a secret phrase of at least ' + SECRET_MIN + ' characters and share it with your partner in private. It never leaves your device and cannot be recovered.';
+  $('#step-3 .btn.primary span').textContent = r.key_check ? 'Unlock room' : 'Create secret & unlock';
+  go(3);
+}
+
 steps[1].addEventListener('submit', (e) => {
   e.preventDefault();
   S.chatId = cleanChat($('#chatId').value);
-  if (!/^[A-Z]{2}[0-9]{4}$/.test(S.chatId)) return fail(steps[1], 'Enter your Chat ID: two letters and four digits, like KR-4821.');
+  if (!/^[A-Z]{2}[0-9]{4}$/.test(S.chatId)) return fail(steps[1], 'Enter your Secret Room Key: two letters and four digits, like KR-4821.');
   go(2);
 });
 
 steps[2].addEventListener('submit', async (e) => {
   e.preventDefault();
   S.memberId = cleanMember($('#memberId').value);
-  if (S.memberId.length < 6) return fail(steps[2], 'Enter your 6-digit Member ID.');
+  if (S.memberId.length < 6) return fail(steps[2], 'Enter your 6-digit Pass Code.');
   busy(steps[2], true, 'Checking…');
   try {
-    const r = await api('POST', '/enter', { chat_id: S.chatId, member_id: S.memberId });
-    setToken(r.token);
-    S.session = r;
-    $('#secret-hint').textContent = r.key_check
-      ? 'Enter the secret phrase you and your partner agreed on. It is checked on this device only.'
-      : 'You are the first one in. Choose a secret phrase of at least ' + SECRET_MIN + ' characters and share it with your partner in private. It never leaves your device and cannot be recovered.';
-    $('#step-3 .btn.primary span').textContent = r.key_check ? 'Unlock room' : 'Create secret & unlock';
-    go(3);
+    await signIn();
   } catch (err) {
     fail(steps[2], err.status ? err.message : 'Cannot reach the server. Check your connection.');
   } finally {
@@ -150,15 +174,93 @@ steps[3].addEventListener('submit', async (e) => {
   }
 });
 
+/* ------------------------------------------------------- create a room */
+const MODE_TEXT = {
+  temp: 'Best for a quick, private talk. Once you are both offline a 30-minute clock starts, and if neither of you comes back the room and every message are deleted for good.',
+  long: 'Best for a room you keep using. It stays until nobody has been in it for 30 days. Every visit starts the 30 days again.',
+};
+let mode = 'temp';
+const newForm = $('#new-form');
+function setMode(m) {
+  mode = m;
+  $$('.mode', newForm).forEach((b) => {
+    const on = b.dataset.mode === m;
+    b.classList.toggle('on', on);
+    b.setAttribute('aria-checked', String(on));
+  });
+  $('#mode-desc').textContent = MODE_TEXT[m];
+}
+$$('.mode', newForm).forEach((b) => b.addEventListener('click', () => setMode(b.dataset.mode)));
+setMode('temp');
+
+const dur = (s) => (s >= 86400 ? Math.round(s / 86400) + ' days' : Math.round(s / 60) + ' minutes');
+let made = null;
+
+newForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  busy(newForm, true, 'Creating…');
+  try {
+    made = await api('POST', '/rooms', { mode });
+    $('#mk-key').textContent = made.key;
+    $('#mk-you').textContent = made.you;
+    $('#mk-partner').textContent = made.partner;
+    $('#made-chip').textContent = made.mode === 'temp' ? 'Temp room' : 'Long-term room';
+    $('#made-line').textContent = 'Deleted ' + dur(made.seconds) + ' after you both leave.';
+    showPane('made', false);
+  } catch (err) {
+    fail(newForm, err.status ? err.message : 'Cannot reach the server. Check your connection.');
+  } finally {
+    busy(newForm, false, 'Create my room');
+  }
+});
+
+async function copyText(text, done) {
+  try {
+    await navigator.clipboard.writeText(text);
+    toast(done || 'Copied', 'ok');
+  } catch {
+    toast('Copy is blocked here. Select the text and copy it by hand.', 'warn');
+  }
+}
+$$('[data-copy-from]').forEach((b) => b.addEventListener('click', () => copyText($('#' + b.dataset.copyFrom).textContent)));
+
+$('#copy-invite').addEventListener('click', () => {
+  if (!made) return;
+  copyText(
+    'You are invited to a private 1two1 room (' + (made.mode === 'temp' ? 'Temp' : 'Long term') + ').\n\n' +
+    'Secret Room Key: ' + made.key + '\n' +
+    'Your Pass Code: ' + made.partner + '\n\n' +
+    'Open ' + location.origin + ' in a Private / Incognito window and choose "Join a room".\n' +
+    'I will tell you the secret phrase separately.',
+    'Invite copied. Remember to share the secret phrase another way.');
+});
+
+$('#enter-made').addEventListener('click', async () => {
+  if (!made) return;
+  const btn = $('#enter-made');
+  btn.disabled = true;
+  S.chatId = cleanChat(made.key);
+  S.memberId = cleanMember(made.you);
+  try {
+    await signIn();
+    made = null;
+    ['mk-key', 'mk-you', 'mk-partner'].forEach((id) => { $('#' + id).textContent = ''; });
+  } catch (err) {
+    toast(err.status ? err.message : 'Cannot reach the server. Check your connection.', 'warn');
+  } finally {
+    btn.disabled = false;
+  }
+});
+
 /* ------------------------------------------------------------ after exit */
 const REASONS = {
   hidden: ['info', 'Hidden. Nothing from the chat is left on this screen.'],
   left: ['info', 'You left the room.'],
   idle: ['info', 'Signed out after a period of inactivity, to keep the chat private.'],
-  session_ended: ['warn', 'Your session ended. If you did not do this, someone may have used your Member ID on another device. Tell your partner and contact support.'],
+  session_ended: ['warn', 'Your session ended. If you did not do this, someone may have used your Pass Code on another device. Tell your partner and contact support.'],
   session_expired: ['info', 'Your session timed out. Sign in again to continue.'],
   signed_out: ['info', 'Please sign in again.'],
-  room_unavailable: ['warn', 'This room is not available right now. Contact support if this is unexpected.'],
+  room_unavailable: ['warn', 'This room is not available. It may have expired or been closed. You can create a new one.'],
 };
 
 function onLeave(reason) {

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1a1530"/><stop offset="1" stop-color="#07070d"/></linearGradient>
+    <linearGradient id="a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#b3a8ff"/><stop offset="1" stop-color="#6a55ff"/></linearGradient>
+    <linearGradient id="b" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7fd2ff"/><stop offset="1" stop-color="#2f7bff"/></linearGradient>
+    <clipPath id="l"><circle cx="24" cy="32" r="15"/></clipPath>
+  </defs>
+  <rect width="64" height="64" rx="16" fill="url(#bg)"/>
+  <rect x="1" y="1" width="62" height="62" rx="15" fill="none" stroke="#ffffff" stroke-opacity=".12" stroke-width="2"/>
+  <circle cx="24" cy="32" r="15" fill="none" stroke="url(#a)" stroke-width="4.5"/>
+  <circle cx="40" cy="32" r="15" fill="none" stroke="url(#b)" stroke-width="4.5"/>
+  <circle cx="40" cy="32" r="15" fill="#ffffff" fill-opacity=".2" clip-path="url(#l)"/>
+  <circle cx="32" cy="29.5" r="3.2" fill="#fff"/>
+  <path d="M30.4 32h3.2l1.2 8h-5.6z" fill="#fff"/>
+</svg>

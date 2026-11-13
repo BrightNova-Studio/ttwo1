@@ -1,4 +1,5 @@
 @import '@fontsource-variable/inter';
+@import './brand.css';
 
 :root {
   --bg: #050508; --solid: #0e0e15; --solid2: #14141d; --line: rgba(255, 255, 255, 0.07); --line2: rgba(255, 255, 255, 0.13);
@@ -20,11 +21,6 @@ button { font: inherit; color: inherit; cursor: pointer; border: 0; background: 
 .bar { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: 24px; padding: 12px 28px; background: rgba(8, 8, 13, 0.8); backdrop-filter: blur(16px); border-bottom: 1px solid var(--line); }
 .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text); }
 .brand.big { margin-bottom: 22px; }
-.mark { position: relative; width: 36px; height: 22px; display: inline-block; }
-.mark i { position: absolute; top: 0; width: 22px; height: 22px; border-radius: 50%; border: 2.4px solid; }
-.mark i:first-child { left: 0; border-color: var(--a1); box-shadow: 0 0 16px rgba(124, 108, 255, 0.5); }
-.mark i:last-child { left: 13px; border-color: var(--a2); box-shadow: 0 0 16px rgba(56, 169, 255, 0.45); mix-blend-mode: screen; }
-.word { font-weight: 700; font-size: 18px; }
 .tag { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; background: rgba(124, 108, 255, 0.16); color: #b9b0ff; }
 .bar nav { display: flex; gap: 4px; flex: 1; }
 .bar nav a { padding: 8px 14px; border-radius: 10px; color: var(--mut); text-decoration: none; font-weight: 500; transition: all 0.2s; }
@@ -137,3 +133,28 @@ select:focus, input[type='date']:focus { border-color: rgba(124, 108, 255, 0.8);
   .wrap { padding: 22px 14px 50px; }
   .creds code { font-size: 16px; }
 }
+
+/* ---------------------------------------------------------- statistics */
+.sec { margin: 26px 0 12px; color: var(--mut); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; }
+.ranges { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+.ranges a { padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line2); color: var(--mut); text-decoration: none; font-size: 13px; font-weight: 600; transition: all 0.2s; }
+.ranges a:hover { color: var(--text); background: rgba(255, 255, 255, 0.05); }
+.ranges a.on { color: #fff; background: rgba(124, 108, 255, 0.25); border-color: rgba(124, 108, 255, 0.6); }
+.custom { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; margin-bottom: 8px; }
+.custom label { min-width: 150px; }
+.custom input[type='date'], .newroom input[type='date'] { height: 46px; padding: 0 12px; border-radius: 13px; background: rgba(0, 0, 0, 0.4); border: 1px solid var(--line2); color: var(--text); font: inherit; color-scheme: dark; }
+.stats.six { grid-template-columns: repeat(6, 1fr); }
+.stats { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+.chart { margin: 18px 0 8px; }
+.chart svg { width: 100%; height: auto; display: block; }
+.chart .grid { stroke: rgba(255, 255, 255, 0.06); stroke-width: 1; }
+.chart .base { stroke: rgba(255, 255, 255, 0.18); stroke-width: 1; }
+.chart .axis { fill: #7a7a90; font-size: 10px; }
+.chart .k1, .legend .k1 { fill: #7c6cff; background: #7c6cff; }
+.chart .k2, .legend .k2 { fill: #ffb454; background: #ffb454; }
+.chart .k3, .legend .k3 { fill: #ff5c75; background: #ff5c75; }
+.legend { display: flex; flex-wrap: wrap; gap: 18px; margin-bottom: 12px; font-size: 13px; color: var(--mut); }
+.legend span { display: inline-flex; align-items: center; gap: 8px; }
+.legend i { width: 12px; height: 12px; border-radius: 4px; display: inline-block; }
+.pill.mode-temp { background: rgba(255, 180, 84, 0.14); color: #ffc477; }
+.pill.mode-long { background: rgba(124, 108, 255, 0.18); color: #b9b0ff; }

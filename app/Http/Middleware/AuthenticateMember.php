@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\Member;
+use App\Models\Room;
 use App\Support\Ids;
 use Closure;
 use Illuminate\Http\Request;
@@ -41,6 +42,10 @@ class AuthenticateMember
         }
 
         Member::whereKey($member->id)->update(['last_seen_at' => now()]);
+        // Presence keeps the room alive: any signed-in member resets the expiry clock.
+        if (! $room->last_active_at || $room->last_active_at->lt(now()->subSeconds(15))) {
+            Room::whereKey($room->id)->update(['last_active_at' => now()]);
+        }
 
         $request->attributes->set('member', $member);
         $request->attributes->set('room', $room);

@@ -14,6 +14,17 @@ return [
     'max_failures' => (int) env('CHAT_MAX_FAILURES', 8),
     'lockout_minutes' => (int) env('CHAT_LOCKOUT_MINUTES', 15),
 
+    // Room modes. A room is deleted for good once BOTH members have been away this long.
+    'modes' => [
+        'temp' => ['label' => 'Temp', 'seconds' => (int) env('CHAT_TEMP_SECONDS', 30 * 60)],
+        'long' => ['label' => 'Long term', 'seconds' => (int) env('CHAT_LONG_SECONDS', 30 * 86400)],
+    ],
+
+    // Anyone can create a room. These limits stop one person from flooding the service.
+    'create_per_hour' => (int) env('CHAT_CREATE_PER_HOUR', 6),     // per IP address
+    'create_per_day' => (int) env('CHAT_CREATE_PER_DAY', 20),      // per IP address
+    'max_rooms' => (int) env('CHAT_MAX_ROOMS', 20000),             // whole service
+
     'max_body_chars' => 24000,
     'disappear_options' => [0, 30, 300, 3600, 86400],
 ];

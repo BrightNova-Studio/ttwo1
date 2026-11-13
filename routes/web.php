@@ -13,6 +13,7 @@ Route::prefix(config('chat.operator_path'))->name('operator.')->group(function (
 
     Route::middleware('auth')->group(function () {
         Route::get('/', [OperatorController::class, 'index'])->name('dashboard');
+        Route::get('stats', [OperatorController::class, 'stats'])->name('stats');
         Route::post('rooms', [OperatorController::class, 'store'])->name('rooms.store');
         Route::post('rooms/{room}/reissue/{slot}', [OperatorController::class, 'reissue'])->name('rooms.reissue');
         Route::patch('rooms/{room}', [OperatorController::class, 'update'])->name('rooms.update');

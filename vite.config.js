@@ -4,7 +4,7 @@ import laravel from 'laravel-vite-plugin';
 export default defineConfig({
     plugins: [
         laravel({
-            input: ['resources/js/chat/main.js', 'resources/css/operator.css', 'resources/js/operator.js'],
+            input: ['resources/js/chat/main.js', 'resources/css/operator.css', 'resources/css/info.css','resources/js/operator.js'],
             refresh: true,
         }),
     ],
