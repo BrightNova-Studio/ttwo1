@@ -75,7 +75,10 @@ input, textarea, select { font: inherit; color: inherit; }
 .tip-x svg { width: 15px; height: 15px; }
 
 /* ---------------------------------------------------------------- gate */
-.gate { position: relative; z-index: 1; min-height: 100%; display: grid; place-content: center; justify-items: center; gap: 14px; padding: max(20px, env(safe-area-inset-top)) 16px 24px; overflow: auto; }
+/* Fixed-height scroll container: centred when it fits, scrolls (never clips) when it does not. */
+.gate { position: fixed; inset: 0; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 14px; padding: max(20px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom)); overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+.gate::before, .gate::after { content: ''; flex: 1 0 0; }
+.gate > * { flex: none; }
 .card {
   width: min(440px, 100%); padding: 34px 30px 26px; border-radius: 28px;
   background: linear-gradient(180deg, rgba(24, 24, 36, 0.78), rgba(12, 12, 19, 0.82));
