@@ -8,6 +8,7 @@ use App\Models\Message;
 use App\Models\Room;
 use App\Models\RoomEvent;
 use App\Support\AndroidRelease;
+use App\Support\Client;
 use App\Support\Guides;
 use App\Support\Ids;
 use App\Support\RoomLifecycle;
@@ -57,7 +58,7 @@ class ChatController extends Controller
             'member_id' => ['required', 'string', 'max:64'],
         ]);
 
-        $ipKey = 'enter-ip:'.$request->ip();
+        $ipKey = 'enter-ip:'.Client::key($request->ip());
         if (RateLimiter::tooManyAttempts($ipKey, 15)) {
             return $this->tooMany();
         }

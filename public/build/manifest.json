@@ -64,14 +64,15 @@
     ]
   },
   "resources/js/chat/main.js": {
-    "file": "assets/main-w1YurqjE.js",
+    "file": "assets/main-DpFWL-1c.js",
     "name": "main",
     "src": "resources/js/chat/main.js",
     "isEntry": true,
     "css": [
-      "assets/main-5RdRHBXL.css"
+      "assets/main-DlY-MdcW.css"
     ],
     "assets": [
+      "assets/pow-worker-DNRN4zrh.js",
       "assets/inter-cyrillic-ext-wght-normal-BOeWTOD4.woff2",
       "assets/inter-cyrillic-wght-normal-DqGufNeO.woff2",
       "assets/inter-greek-ext-wght-normal-DlzME5K_.woff2",

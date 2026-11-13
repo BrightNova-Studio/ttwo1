@@ -37,6 +37,21 @@ return [
     ],
     'random_joins_per_hour' => (int) env('CHAT_RANDOM_PER_HOUR', 30),   // per IP address
 
+    // Invisible anti-automation check before a room is created / a random search starts (see App\Support\Challenge).
+    // "bits" = leading zero bits the browser must find; each extra bit doubles the work.
+    // 14 bits is a fraction of a second on a phone and is solved in the background while the person reads the page.
+    'pow' => [
+        'enabled' => (bool) env('CHAT_POW', true),
+        'base_bits' => (int) env('CHAT_POW_BITS', 14),
+        'step_bits' => 1,          // extra bit (double the work) for every room this visitor already made in the last hour
+        'max_step_bits' => 8,
+        'cap_bits' => 26,
+        'ttl' => 600,              // seconds a solved challenge stays valid
+        'surge_low' => (int) env('CHAT_POW_SURGE_LOW', 30),     // site-wide new rooms per minute: puzzles get a little harder
+        'surge_high' => (int) env('CHAT_POW_SURGE_HIGH', 80),   // ... much harder
+        'pause_at' => (int) env('CHAT_POW_PAUSE', 200),         // ... new rooms pause for a minute ("busy")
+    ],
+
     'max_body_chars' => 24000,
     'disappear_options' => [0, 30, 300, 3600, 86400],
 

@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Chat;
 use App\Http\Controllers\Controller;
 use App\Models\Room;
 use App\Models\RoomEvent;
+use App\Support\Challenge;
+use App\Support\Client;
 use App\Support\Ids;
 use App\Support\RoomLifecycle;
 use Illuminate\Http\JsonResponse;
@@ -19,14 +21,28 @@ use Illuminate\Validation\Rule;
  */
 class RoomController extends Controller
 {
+    /** A fresh puzzle for the invisible human check. Cheap for us; the browser solves it in the background. */
+    public function challenge(Request $request): JsonResponse
+    {
+        $purpose = $request->query('purpose');
+        abort_unless(in_array($purpose, ['create', 'match'], true), 422);
+
+        return response()->json(Challenge::issue($purpose, Client::key($request->ip())));
+    }
+
     public function create(Request $request): JsonResponse
     {
         $data = $request->validate(['mode' => ['required', Rule::in(['temp', 'long'])]]);
+        $client = Client::key($request->ip());
+
+        if ($refused = Challenge::verify($request, 'create', $client)) {
+            return $refused;
+        }
 
         RoomLifecycle::sweepSoon();
 
-        $hourKey = 'create-h:'.$request->ip();
-        $dayKey = 'create-d:'.$request->ip();
+        $hourKey = 'create-h:'.$client;
+        $dayKey = 'create-d:'.$client;
         if (RateLimiter::tooManyAttempts($hourKey, (int) config('chat.create_per_hour'))
             || RateLimiter::tooManyAttempts($dayKey, (int) config('chat.create_per_day'))) {
             return response()->json([

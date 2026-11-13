@@ -85,6 +85,7 @@ class OperatorController extends Controller
                 'created_random' => $events->where('event', 'created')->where('source', 'random')->count(),
                 'ended' => $count('ended'),
                 'reported' => $count('reported'),
+                'throttled' => $count('throttled'),
             ],
             'now' => [
                 'active' => $rooms->where('status', 'active')->count(),

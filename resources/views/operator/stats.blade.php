@@ -44,6 +44,7 @@
     <div class="stat"><b>{{ $period['created_random'] }}</b><span>Random matches</span></div>
     <div class="stat"><b>{{ $period['ended'] }}</b><span>Ended by a member</span></div>
     <div class="stat"><b>{{ $period['reported'] }}</b><span>Reported by a member</span></div>
+    <div class="stat"><b>{{ $period['throttled'] }}</b><span>Emergency brake (flood) minutes</span></div>
 </div>
 
 <div class="panel pad chart">

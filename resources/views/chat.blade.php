@@ -87,6 +87,7 @@
         {{-- ---------------------------------------------------------- create --}}
         <div id="pane-new" hidden>
             <form id="new-form" novalidate>
+                <input class="hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
                 <label>Choose how long it lives</label>
                 <div class="modes2" role="radiogroup" aria-label="Room type">
                     <button type="button" class="mode on" data-mode="temp" role="radio" aria-checked="true">

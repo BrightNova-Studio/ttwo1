@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\MatchTicket;
 use App\Models\Room;
 use App\Models\RoomEvent;
+use App\Support\Challenge;
+use App\Support\Client;
 use App\Support\Ids;
 use App\Support\RoomLifecycle;
 use Illuminate\Http\JsonResponse;
@@ -34,7 +36,12 @@ class MatchController extends Controller
             'adult' => ['accepted'],
         ]);
 
-        $key = 'match-join:'.$request->ip();
+        $client = Client::key($request->ip());
+        if ($refused = Challenge::verify($request, 'match', $client)) {
+            return $refused;
+        }
+
+        $key = 'match-join:'.$client;
         if (RateLimiter::tooManyAttempts($key, (int) config('chat.random_joins_per_hour'))) {
             return response()->json(['error' => 'slow_down', 'message' => 'You have searched a lot recently. Please take a short break.'], 429);
         }

@@ -5,6 +5,7 @@ import { startChat } from './chat.js';
 import { startSearch } from './random.js';
 import { icon } from './icons.js';
 import './videos.js';
+import { prepare as prepareCheck, withCheck } from './pow.js';
 import { $, $$, h, toast, unlockAudio } from './util.js';
 
 const gate = $('#gate');
@@ -66,8 +67,8 @@ function showPane(name, focus = true) {
   if (focus && name === 'join') setTimeout(() => $('input', $('.step.on', panes.join))?.focus(), 60);
 }
 tabs.join.addEventListener('click', () => showPane('join'));
-tabs.new.addEventListener('click', () => showPane('new'));
-tabs.rand.addEventListener('click', () => showPane('rand'));
+tabs.new.addEventListener('click', () => { showPane('new'); prepareCheck('create').catch(() => {}); });
+tabs.rand.addEventListener('click', () => { showPane('rand'); prepareCheck('match').catch(() => {}); });
 $$('[data-ico]').forEach((el) => { el.innerHTML = icon(el.dataset.ico); });
 
 function go(n, focus = true) {
@@ -345,7 +346,7 @@ newForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   busy(newForm, true, 'Creating…');
   try {
-    made = await api('POST', '/rooms', { mode });
+    made = await withCheck('create', (extra) => api('POST', '/rooms', { mode, ...extra }), { onSlow: () => toast('Quick security check, one moment…') });
     $('#mk-key').textContent = made.key;
     $('#mk-you').textContent = made.you;
     $('#mk-partner').textContent = made.partner;

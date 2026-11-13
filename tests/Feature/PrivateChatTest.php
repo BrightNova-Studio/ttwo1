@@ -679,6 +679,95 @@ class PrivateChatTest extends TestCase
 
     /* ------------------------------------------------------ Android app */
 
+    /* ------------------------------------------------------- invisible human check */
+
+    private function powOn(int $bits = 6): void
+    {
+        config(['chat.pow.enabled' => true, 'chat.pow.base_bits' => $bits]);
+    }
+
+    /** What the browser does: find a number whose SHA-256 (with the token) starts with enough zero bits. */
+    private function solved(string $purpose = 'create'): array
+    {
+        $ch = $this->getJson('/api/challenge?purpose='.$purpose)->assertOk()->json();
+        for ($n = 0; ; $n++) {
+            if (\App\Support\Challenge::zeroBits(hash('sha256', $ch['token'].':'.$n, true)) >= $ch['bits']) {
+                return ['pow_token' => $ch['token'], 'pow_nonce' => (string) $n, 'bits' => $ch['bits']];
+            }
+        }
+    }
+
+    public function test_creating_a_room_needs_a_solved_puzzle_once(): void
+    {
+        $this->powOn();
+
+        $this->postJson('/api/rooms', ['mode' => 'temp'])->assertStatus(422)->assertJson(['error' => 'pow_required']);
+
+        $s = $this->solved();
+        $this->postJson('/api/rooms', ['mode' => 'temp'] + $s)->assertCreated();
+        // The same answer cannot be replayed.
+        $this->postJson('/api/rooms', ['mode' => 'temp'] + $s)->assertStatus(422);
+
+        // A made-up answer is refused.
+        $s2 = $this->solved();
+        $this->postJson('/api/rooms', ['mode' => 'temp', 'pow_token' => $s2['pow_token'], 'pow_nonce' => '1234567891'])->assertStatus(422);
+    }
+
+    public function test_the_puzzle_gets_harder_for_a_visitor_who_keeps_making_rooms(): void
+    {
+        $this->powOn(6);
+
+        $first = $this->solved();
+        $this->assertSame(6, $first['bits']);
+        $this->postJson('/api/rooms', ['mode' => 'temp'] + $first)->assertCreated();
+
+        $second = $this->solved();
+        $this->assertSame(7, $second['bits'], 'one more bit (double the work) after one room');
+
+        // An old, easier puzzle is no longer enough once the bar has moved.
+        $old = $first['pow_token'];
+        $this->assertNotSame($old, $second['pow_token']);
+    }
+
+    public function test_a_puzzle_is_only_good_for_the_job_it_was_issued_for(): void
+    {
+        $this->powOn();
+
+        $s = $this->solved('create');
+        $this->postJson('/api/match/join', ['topic' => 'any', 'pub' => 'abc', 'adult' => true] + $s)->assertStatus(422);
+
+        $m = $this->solved('match');
+        $this->postJson('/api/match/join', ['topic' => 'any', 'pub' => 'abc', 'adult' => true] + $m)->assertStatus(201);
+        $this->postJson('/api/match/join', ['topic' => 'any', 'pub' => 'abc', 'adult' => true])->assertStatus(422)->assertJson(['error' => 'pow_required']);
+    }
+
+    public function test_a_filled_hidden_field_marks_a_bot(): void
+    {
+        $this->powOn();
+        $s = $this->solved();
+        $this->postJson('/api/rooms', ['mode' => 'temp', 'hp' => 'http://spam.example'] + $s)->assertStatus(422)->assertJson(['error' => 'check_failed']);
+    }
+
+    public function test_a_flood_of_new_rooms_pauses_creation_and_is_counted(): void
+    {
+        $this->powOn();
+        \Illuminate\Support\Facades\Cache::put('pow-surge:'.(int) floor(time() / 60), 500, 120);
+
+        $this->postJson('/api/rooms', ['mode' => 'temp'])->assertStatus(503)->assertJson(['error' => 'busy']);
+        $this->assertSame(1, \App\Models\RoomEvent::where('event', 'throttled')->count());
+
+        // One count per minute, not per request.
+        $this->postJson('/api/rooms', ['mode' => 'temp'])->assertStatus(503);
+        $this->assertSame(1, \App\Models\RoomEvent::where('event', 'throttled')->count());
+    }
+
+    public function test_ipv6_addresses_in_one_block_share_a_limit(): void
+    {
+        $this->assertSame(\App\Support\Client::key('2401:4900:1cbd:da48:aaaa:1:2:3'), \App\Support\Client::key('2401:4900:1cbd:da48:ffff:9:9:9'));
+        $this->assertNotSame(\App\Support\Client::key('2401:4900:1cbd:da48::1'), \App\Support\Client::key('2401:4900:1cbd:da49::1'));
+        $this->assertSame('203.0.113.9', \App\Support\Client::key('203.0.113.9'));
+    }
+
     public function test_home_page_lists_the_how_to_videos_that_exist(): void
     {
         $dir = public_path('videos');

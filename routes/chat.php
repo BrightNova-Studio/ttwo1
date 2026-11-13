@@ -18,7 +18,10 @@ Route::get('/sitemap.xml', [InfoController::class, 'sitemap']);
 
 Route::prefix('api')->group(function () {
     Route::post('enter', [ChatController::class, 'enter']);
-    Route::post('rooms', [RoomController::class, 'create']);
+    Route::middleware('throttle:entry')->group(function () {
+        Route::get('challenge', [RoomController::class, 'challenge']);
+        Route::post('rooms', [RoomController::class, 'create']);
+    });
     Route::middleware('throttle:match')->prefix('match')->group(function () {
         Route::post('join', [MatchController::class, 'join']);
         Route::post('poll', [MatchController::class, 'poll']);
