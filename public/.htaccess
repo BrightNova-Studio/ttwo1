@@ -1,3 +1,6 @@
+# Pin PHP 8.4 for this site (ServerByte reads the handler from .htaccess).
+AddHandler x-httpd-php84 .php
+
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes
