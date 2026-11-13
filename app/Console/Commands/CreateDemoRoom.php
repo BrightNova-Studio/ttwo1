@@ -20,9 +20,8 @@ class CreateDemoRoom extends Command
             return self::FAILURE;
         }
 
-        $chat = Ids::generate();
-        $m1 = Ids::generate();
-        $m2 = Ids::generate();
+        $chat = Ids::freshChat();
+        [$m1, $m2] = Ids::memberPair();
 
         $room = Room::create(['chat_hash' => Ids::hash($chat), 'label' => $this->option('label')]);
         $room->members()->create(['slot' => 1, 'id_hash' => Ids::hash($m1)]);

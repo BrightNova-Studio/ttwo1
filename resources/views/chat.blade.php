@@ -32,14 +32,14 @@
 
         <form id="step-1" class="step on" autocomplete="off" novalidate>
             <label for="chatId">Chat ID</label>
-            <div class="inp"><input id="chatId" name="c_{{ bin2hex(random_bytes(3)) }}" type="text" inputmode="text" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" placeholder="XXXX-XXXX-XXXX-XXXX" maxlength="19" required></div>
+            <div class="inp"><input id="chatId" name="c_{{ bin2hex(random_bytes(3)) }}" type="text" inputmode="text" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" placeholder="AB-1234" maxlength="7" required></div>
             <p class="err" role="alert"></p>
             <button class="btn primary block" type="submit"><span>Continue</span></button>
         </form>
 
         <form id="step-2" class="step" autocomplete="off" novalidate>
             <label for="memberId">Your Member ID</label>
-            <div class="inp"><input id="memberId" class="mask" name="m_{{ bin2hex(random_bytes(3)) }}" type="text" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" placeholder="XXXX-XXXX-XXXX-XXXX" maxlength="19" required>
+            <div class="inp"><input id="memberId" class="mask" name="m_{{ bin2hex(random_bytes(3)) }}" type="text" inputmode="numeric" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="123-456" maxlength="7" required>
                 <button class="eye" type="button" data-reveal="memberId" aria-label="Show or hide"></button></div>
             <p class="err" role="alert"></p>
             <div class="row2">

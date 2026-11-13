@@ -16,9 +16,8 @@ class PrivateChatTest extends TestCase
 
     private function makeRoom(): array
     {
-        $chat = Ids::generate();
-        $m1 = Ids::generate();
-        $m2 = Ids::generate();
+        $chat = Ids::freshChat();
+        [$m1, $m2] = Ids::memberPair();
         $room = Room::create(['chat_hash' => Ids::hash($chat)]);
         $room->members()->create(['slot' => 1, 'id_hash' => Ids::hash($m1)]);
         $room->members()->create(['slot' => 2, 'id_hash' => Ids::hash($m2)]);
@@ -52,8 +51,8 @@ class PrivateChatTest extends TestCase
         [, $chat, $m1] = $this->makeRoom();
 
         $this->enter($chat, $m1)->assertOk()->assertJsonStructure(['token', 'slot', 'room', 'peer']);
-        $this->enter($chat, Ids::generate())->assertStatus(401);
-        $this->enter(Ids::generate(), $m1)->assertStatus(401);
+        $this->enter($chat, '000-000')->assertStatus(401);
+        $this->enter('ZZ-0000', $m1)->assertStatus(401);
         // lower case and missing dashes are fine
         $this->enter(strtolower(str_replace('-', '', $chat)), $m1)->assertOk();
     }
@@ -72,7 +71,7 @@ class PrivateChatTest extends TestCase
         Cache::flush();
 
         for ($i = 0; $i < 3; $i++) {
-            $this->enter($chat, Ids::generate())->assertStatus(401);
+            $this->enter($chat, '000-000')->assertStatus(401);
         }
         $this->enter($chat, $m1)->assertStatus(429);
     }
@@ -353,5 +352,15 @@ class PrivateChatTest extends TestCase
 
         $this->actingAs($op)->delete("/operator/rooms/{$room->id}")->assertRedirect();
         $this->assertSame(0, Room::count());
+    }
+
+    public function test_ids_are_short_and_memorable(): void
+    {
+        for ($i = 0; $i < 50; $i++) {
+            $this->assertMatchesRegularExpression('/^[A-Z]{2}-\d{4}$/', Ids::chat());
+            $this->assertMatchesRegularExpression('/^\d{3}-\d{3}$/', Ids::member());
+            [$a, $b] = Ids::memberPair();
+            $this->assertNotSame($a, $b);
+        }
     }
 }

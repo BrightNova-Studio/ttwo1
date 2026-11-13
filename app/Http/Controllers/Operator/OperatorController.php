@@ -46,9 +46,8 @@ class OperatorController extends Controller
             'expires_at' => ['nullable', 'date', 'after:now'],
         ]);
 
-        $chatId = Ids::generate();
-        $m1 = Ids::generate();
-        $m2 = Ids::generate();
+        $chatId = Ids::freshChat();
+        [$m1, $m2] = Ids::memberPair();
 
         $room = DB::transaction(function () use ($data, $chatId, $m1, $m2) {
             $room = Room::create([
@@ -81,7 +80,10 @@ class OperatorController extends Controller
     {
         abort_unless(in_array($slot, [1, 2], true), 404);
 
-        $new = Ids::generate();
+        $other = Member::where('room_id', $room->id)->where('slot', '!=', $slot)->first();
+        do {
+            $new = Ids::member();
+        } while ($other && hash_equals($other->id_hash, Ids::hash($new)));
         Member::where('room_id', $room->id)->where('slot', $slot)->update([
             'id_hash' => Ids::hash($new),
             'token_hash' => null,
@@ -137,9 +139,8 @@ class OperatorController extends Controller
      */
     public function reset(Room $room): RedirectResponse
     {
-        $chatId = Ids::generate();
-        $m1 = Ids::generate();
-        $m2 = Ids::generate();
+        $chatId = Ids::freshChat();
+        [$m1, $m2] = Ids::memberPair();
 
         $room->mutate(function () use ($room, $chatId, $m1, $m2) {
             $room->messages()->delete();

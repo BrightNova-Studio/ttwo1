@@ -10,7 +10,7 @@ Stack: PHP 8.4, Laravel 13, MySQL/MariaDB in production (SQLite locally), plain 
 | Layer | What happens |
 |---|---|
 | Messages, nicknames, reactions | Encrypted **in the browser** with AES-256-GCM. The key comes from the shared secret phrase (PBKDF2, 600k rounds) and never leaves the browser. The server stores only ciphertext. |
-| Chat ID / Member IDs | Random (~79 bits). Stored only as keyed hashes, shown to the operator **once** at creation. |
+| Chat ID / Member IDs | Short and memorable: Chat ID = 2 letters + 4 digits (`KR-4821`), Member ID = 6 digits (`482-913`). Stored only as keyed hashes, shown to the operator **once**. Guessing is stopped by lockouts (8 wrong tries per chat → 15 min), a per-IP limit, and the secret phrase, which is what actually encrypts messages. |
 | Sessions | Bearer token held in page memory only. No cookie, no localStorage. Close or reload the tab and the IDs are asked again. One live session per member; a new sign-in ends the old one. |
 | Operator | Can create, disable, re-issue a Member ID, erase messages, delete a room. Has no screen, route or column that returns message content. |
 | Browser | Strict CSP (nothing third-party), `no-store`, `no-referrer`, no framing, `noindex`. |

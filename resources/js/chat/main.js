@@ -33,9 +33,16 @@ $$('.eye').forEach((b) => {
 });
 
 /* ------------------------------------------------------------ id helpers */
-const clean = (v) => String(v).toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 16);
-const group = (v) => clean(v).replace(/(.{4})(?=.)/g, '$1-');
-[$('#chatId'), $('#memberId')].forEach((i) => i.addEventListener('input', () => { i.value = group(i.value); }));
+// Chat ID = 2 letters + 4 digits (KR-4821). Member ID = 6 digits (482-913).
+const cleanChat = (v) => {
+  const s = String(v).toUpperCase().replace(/[^A-Z0-9]/g, '');
+  return (s.slice(0, 2).replace(/[^A-Z]/g, '') + s.slice(2).replace(/[^0-9]/g, '')).slice(0, 6);
+};
+const cleanMember = (v) => String(v).replace(/[^0-9]/g, '').slice(0, 6);
+const groupChat = (v) => cleanChat(v).replace(/^(.{2})(?=.)/, '$1-');
+const groupMember = (v) => cleanMember(v).replace(/^(.{3})(?=.)/, '$1-');
+$('#chatId').addEventListener('input', (e) => { e.target.value = groupChat(e.target.value); });
+$('#memberId').addEventListener('input', (e) => { e.target.value = groupMember(e.target.value); });
 
 /* ----------------------------------------------------------------- steps */
 function go(n, focus = true) {
@@ -68,15 +75,15 @@ $$('[data-back]').forEach((b) => b.addEventListener('click', () => {
 
 steps[1].addEventListener('submit', (e) => {
   e.preventDefault();
-  S.chatId = clean($('#chatId').value);
-  if (S.chatId.length < 16) return fail(steps[1], 'Enter your full 16-character Chat ID.');
+  S.chatId = cleanChat($('#chatId').value);
+  if (!/^[A-Z]{2}[0-9]{4}$/.test(S.chatId)) return fail(steps[1], 'Enter your Chat ID: two letters and four digits, like KR-4821.');
   go(2);
 });
 
 steps[2].addEventListener('submit', async (e) => {
   e.preventDefault();
-  S.memberId = clean($('#memberId').value);
-  if (S.memberId.length < 16) return fail(steps[2], 'Enter your full 16-character Member ID.');
+  S.memberId = cleanMember($('#memberId').value);
+  if (S.memberId.length < 6) return fail(steps[2], 'Enter your 6-digit Member ID.');
   busy(steps[2], true, 'Checking…');
   try {
     const r = await api('POST', '/enter', { chat_id: S.chatId, member_id: S.memberId });

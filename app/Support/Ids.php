@@ -8,20 +8,47 @@ namespace App\Support;
  */
 class Ids
 {
-    private const ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'; // no 0/O/1/I/L
+    private const LETTERS = 'ABCDEFGHJKMNPQRSTUVWXYZ'; // no I, L, O
 
-    public static function generate(): string
+    /**
+     * Chat ID: two letters + four digits, e.g. KR-4821. Easy to remember; the letters keep the
+     * space large enough for millions of rooms. Guessing is stopped by lockouts, not by length.
+     */
+    public static function chat(): string
     {
-        $out = [];
-        for ($g = 0; $g < 4; $g++) {
-            $chunk = '';
-            for ($i = 0; $i < 4; $i++) {
-                $chunk .= self::ALPHABET[random_int(0, strlen(self::ALPHABET) - 1)];
-            }
-            $out[] = $chunk;
-        }
+        $n = strlen(self::LETTERS) - 1;
 
-        return implode('-', $out); // ~79 bits of entropy
+        return self::LETTERS[random_int(0, $n)].self::LETTERS[random_int(0, $n)]
+            .'-'.str_pad((string) random_int(0, 9999), 4, '0', STR_PAD_LEFT);
+    }
+
+    /** Member ID: six digits, e.g. 482-913. */
+    public static function member(): string
+    {
+        $d = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+
+        return substr($d, 0, 3).'-'.substr($d, 3);
+    }
+
+    /** A Chat ID that no room uses yet. */
+    public static function freshChat(): string
+    {
+        do {
+            $id = self::chat();
+        } while (\App\Models\Room::where('chat_hash', self::hash($id))->exists());
+
+        return $id;
+    }
+
+    /** Two different Member IDs for one room. */
+    public static function memberPair(): array
+    {
+        do {
+            $a = self::member();
+            $b = self::member();
+        } while (self::normalize($a) === self::normalize($b));
+
+        return [$a, $b];
     }
 
     public static function normalize(?string $id): string
