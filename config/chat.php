@@ -2,7 +2,7 @@
 
 return [
     // Shown on the entry page so people can ask for a new chat ID. Set SUPPORT_EMAIL in .env.
-    'support_email' => env('SUPPORT_EMAIL', '1two1@thesecretbasket.com'),
+    'support_email' => env('SUPPORT_EMAIL', '1two1@thesecretbasket.in'),
 
     // The operator console lives at this path. Pick something unguessable in production.
     'operator_path' => trim((string) env('OPERATOR_PATH', 'operator'), '/'),
