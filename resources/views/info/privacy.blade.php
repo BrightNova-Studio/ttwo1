@@ -1,5 +1,9 @@
 @extends('info.layout')
 @section('title', 'Privacy statement')
+@php
+    $seoTitle = 'Privacy Statement: We Cannot Read Your Chats | 1two1';
+    $seoDesc = 'What 1two1 can and cannot see: encrypted messages, hashed codes, no cookies, no tracking, no accounts, and how rooms are deleted for good.';
+@endphp
 @section('content')
 <p class="eyebrow">Privacy statement</p>
 <h1>We built it so we cannot read your chats.</h1>

@@ -11,10 +11,10 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [ChatController::class, 'page']);
 
 // Plain explainer pages: no scripts, no storage.
-Route::get('/how-it-works', [InfoController::class, 'show'])->defaults('page', 'how');
-Route::get('/temp-vs-long', [InfoController::class, 'show'])->defaults('page', 'modes');
-Route::get('/privacy', [InfoController::class, 'show'])->defaults('page', 'privacy');
-Route::get('/faq', [InfoController::class, 'show'])->defaults('page', 'faq');
+foreach (InfoController::PAGES as $slug => [$path]) {
+    Route::get($path, [InfoController::class, 'show'])->defaults('page', $slug);
+}
+Route::get('/sitemap.xml', [InfoController::class, 'sitemap']);
 
 Route::prefix('api')->group(function () {
     Route::post('enter', [ChatController::class, 'enter']);

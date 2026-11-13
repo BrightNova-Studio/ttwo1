@@ -22,8 +22,9 @@ use Illuminate\Validation\Rule;
  */
 class ChatController extends Controller
 {
-    public function page()
+    public function page(Request $request)
     {
+        $request->attributes->set('seo', ['index' => true]);
         RoomLifecycle::sweepSoon();
 
         return view('chat', [

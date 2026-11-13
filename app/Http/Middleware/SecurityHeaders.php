@@ -42,6 +42,17 @@ class SecurityHeaders
             'Permissions-Policy' => 'camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()',
         ];
 
+        // Public marketing / explainer pages are meant to be found. Everything else (chat API, operator console)
+        // stays noindex. A controller opts a page in with $request->attributes->set('seo', [...]).
+        $seo = $request->attributes->get('seo');
+        if ($seo && ! empty($seo['index'])) {
+            $headers['X-Robots-Tag'] = 'index, follow, max-image-preview:large, max-snippet:-1';
+        }
+        if ($seo && ! empty($seo['cache'])) {
+            $headers['Cache-Control'] = 'public, max-age=600';
+            unset($headers['Pragma']);
+        }
+
         foreach ($headers as $name => $value) {
             $response->headers->set($name, $value);
         }

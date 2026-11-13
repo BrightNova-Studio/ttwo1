@@ -64,12 +64,12 @@
     ]
   },
   "resources/js/chat/main.js": {
-    "file": "assets/main-B7xGcf3R.js",
+    "file": "assets/main-Z3z9_tWD.js",
     "name": "main",
     "src": "resources/js/chat/main.js",
     "isEntry": true,
     "css": [
-      "assets/main-DFN0Gek4.css"
+      "assets/main-CxSZT-UW.css"
     ],
     "assets": [
       "assets/inter-cyrillic-ext-wght-normal-BOeWTOD4.woff2",

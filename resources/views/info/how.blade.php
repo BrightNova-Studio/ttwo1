@@ -1,5 +1,9 @@
 @extends('info.layout')
 @section('title', 'How it works')
+@php
+    $seoTitle = 'How 1two1 Works: A Private Chat Room in 4 Steps';
+    $seoDesc = 'Create a private, end-to-end encrypted chat room, share the Secret Room Key and Pass Code, agree a secret phrase, and chat. No account or app needed.';
+@endphp
 @section('content')
 <p class="eyebrow">How it works</p>
 <h1>A locked room with exactly two keys.</h1>

@@ -571,6 +571,61 @@ class PrivateChatTest extends TestCase
         $this->assertSame(0, Room::count());
     }
 
+    /* ------------------------------------------------------------- SEO */
+
+    public function test_public_pages_are_indexable_with_canonical_and_structured_data(): void
+    {
+        foreach (['/', '/private-chat-room', '/temporary-chat-room', '/anonymous-chat', '/how-it-works', '/temp-vs-long', '/privacy', '/faq'] as $url) {
+            $r = $this->get($url)->assertOk();
+            $this->assertStringContainsString('index, follow', $r->headers->get('X-Robots-Tag'), $url);
+            $this->assertStringNotContainsString('noindex', $r->headers->get('X-Robots-Tag'), $url);
+            $html = $r->getContent();
+            $this->assertStringNotContainsString('noindex', $html, $url);
+            $this->assertMatchesRegularExpression('#<link rel="canonical" href="https?://[^"]+">#', $html, $url);
+            $this->assertMatchesRegularExpression('#<title>[^<]{20,70}</title>#u', $html, $url);
+            $this->assertMatchesRegularExpression('#<meta name="description" content="[^"]{80,200}">#u', $html, $url);
+            $this->assertStringContainsString('og:image', $html);
+            $this->assertCount(0, $r->headers->getCookies());
+            preg_match_all('#<script type="application/ld\+json">(.*?)</script>#s', $html, $m);
+            $this->assertNotEmpty($m[1], "$url has structured data");
+            foreach ($m[1] as $json) {
+                $this->assertIsArray(json_decode($json, true), "$url JSON-LD is valid");
+            }
+            $this->assertSame(1, preg_match_all('#<h1[ >]#', $html), "$url has exactly one h1");
+        }
+        $this->assertStringContainsString('"FAQPage"', $this->get('/faq')->getContent());
+        $this->assertStringContainsString('"WebApplication"', $this->get('/')->getContent());
+    }
+
+    public function test_api_and_operator_stay_out_of_search_results(): void
+    {
+        $this->assertStringContainsString('noindex', $this->postJson('/api/rooms', ['mode' => 'temp'])->headers->get('X-Robots-Tag'));
+        $login = $this->get('/operator/login');
+        $this->assertStringContainsString('noindex', $login->headers->get('X-Robots-Tag'));
+        $this->assertStringContainsString('noindex', $login->getContent());
+    }
+
+    public function test_sitemap_lists_every_public_page_and_robots_points_to_it(): void
+    {
+        $r = $this->get('/sitemap.xml')->assertOk();
+        $this->assertStringContainsString('application/xml', $r->headers->get('Content-Type'));
+        $xml = simplexml_load_string($r->getContent());
+        $this->assertNotFalse($xml);
+        $locs = array_map('strval', iterator_to_array($xml->url->loc ?? [], false));
+        $all = [];
+        foreach ($xml->url as $u) {
+            $all[] = (string) $u->loc;
+        }
+        $this->assertCount(8, $all);
+        foreach (['/', '/private-chat-room', '/temporary-chat-room', '/anonymous-chat', '/faq', '/privacy'] as $p) {
+            $this->assertContains(rtrim(config('app.url'), '/').$p, $all);
+        }
+        $this->assertStringNotContainsString('operator', $r->getContent());
+        $robots = file_get_contents(public_path('robots.txt'));
+        $this->assertStringContainsString('Sitemap: https://1two1.thesecretbasket.in/sitemap.xml', $robots);
+        $this->assertStringContainsString('Disallow: /api/', $robots);
+    }
+
     public function test_ids_are_short_and_memorable(): void
     {
         for ($i = 0; $i < 50; $i++) {

@@ -474,3 +474,12 @@ label.agree input { flex: none; width: 20px; height: 20px; margin-top: 1px; acce
 .radar i:nth-child(3) { animation-delay: 1.8s; }
 .radar span { position: absolute; inset: 44px; border-radius: 50%; background: var(--grad); box-shadow: 0 0 36px rgba(95, 110, 255, 0.9); animation: pulse 1.6s ease-in-out infinite; }
 @keyframes ping { 0% { transform: scale(0.35); opacity: 0.9; } 100% { transform: scale(1.15); opacity: 0; } }
+
+/* ----------------------------------------------- home page: about / SEO copy */
+.about { width: min(440px, 100%); margin-top: 8px; padding: 22px 4px 6px; color: var(--mut); animation: rise 1s var(--ease) 0.3s both; }
+.about h2 { font-size: 18px; letter-spacing: -0.01em; color: var(--text); margin-bottom: 8px; }
+.about > p { font-size: 13.5px; line-height: 1.6; margin-bottom: 14px; }
+.about ul { list-style: none; padding: 0; display: grid; gap: 8px; }
+.about li a { display: flex; flex-direction: column; gap: 2px; padding: 12px 14px; border-radius: 14px; background: rgba(255, 255, 255, 0.035); border: 1px solid var(--line); text-decoration: none; color: var(--mut); font-size: 12.5px; transition: border-color 0.2s, background 0.2s; }
+.about li a:hover { border-color: rgba(124, 108, 255, 0.5); background: rgba(124, 108, 255, 0.08); }
+.about li a b { color: var(--text); font-size: 14px; }

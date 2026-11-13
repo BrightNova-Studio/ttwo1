@@ -1,5 +1,9 @@
 @extends('info.layout')
 @section('title', 'Temp vs Long term')
+@php
+    $seoTitle = 'Temp vs Long-Term Private Chat Rooms | 1two1';
+    $seoDesc = 'Temp rooms delete 30 minutes after you both leave. Long-term rooms last 30 days. Compare the two private, encrypted chat room modes and pick one.';
+@endphp
 @section('content')
 <p class="eyebrow">Two modes</p>
 <h1>Temp for a quick, quiet talk. Long term for a room you keep.</h1>

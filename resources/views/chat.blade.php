@@ -5,10 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
     <meta name="color-scheme" content="dark">
     <meta name="theme-color" content="#06060a">
-    <meta name="robots" content="noindex, nofollow, noarchive">
     <meta name="referrer" content="no-referrer">
-    <meta name="description" content="Open a secret, end-to-end encrypted room for exactly two people. Temp rooms vanish 30 minutes after you both leave.">
-    <title>1two1 · Secret rooms for two</title>
+    @include('partials.seo', [
+        'seoTitle' => '1two1: Private Encrypted Chat Rooms for Two, No Signup',
+        'seoDesc' => 'Open a private, end-to-end encrypted chat room for two people in seconds. No account, no app, nothing saved. Temp rooms delete themselves, or meet someone new with Random connect.',
+        'seoPath' => '/',
+        'seoJson' => [
+            ['@context' => 'https://schema.org', '@type' => 'WebSite', 'name' => '1two1', 'url' => rtrim(config('app.url'), '/').'/', 'description' => 'Private, end-to-end encrypted chat rooms for exactly two people.'],
+            ['@context' => 'https://schema.org', '@type' => 'WebApplication', 'name' => '1two1', 'url' => rtrim(config('app.url'), '/').'/', 'applicationCategory' => 'CommunicationApplication', 'operatingSystem' => 'Any (web browser)', 'browserRequirements' => 'Requires a modern browser with JavaScript and Web Crypto', 'inLanguage' => 'en', 'isAccessibleForFree' => true, 'offers' => ['@type' => 'Offer', 'price' => '0', 'priceCurrency' => 'USD'], 'featureList' => ['End-to-end encrypted (AES-256-GCM)', 'No account or app needed', 'Temp rooms that delete themselves 30 minutes after both people leave', 'Long-term rooms that last 30 days', 'Random connect with strangers', 'View-once and disappearing messages']],
+        ],
+    ])
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     @vite(['resources/js/chat/main.js'])
 </head>
@@ -150,6 +156,16 @@
         <a href="/privacy" target="_blank" rel="noopener">Privacy</a>
         <a href="/faq" target="_blank" rel="noopener">FAQ</a>
     </nav>
+
+    <section class="about" aria-labelledby="about-h">
+        <h2 id="about-h">Private chat rooms for two people</h2>
+        <p>1two1 gives two people a private place to talk, with no sign-up and nothing to install. Messages are end-to-end encrypted in your browser, so not even we can read them.</p>
+        <ul>
+            <li><a href="/private-chat-room"><b>Private chat room</b><span>A locked room with exactly two keys.</span></a></li>
+            <li><a href="/temporary-chat-room"><b>Temporary chat room</b><span>Deletes itself 30 minutes after you both leave.</span></a></li>
+            <li><a href="/anonymous-chat"><b>Anonymous chat</b><span>Meet someone new, safely, with Random connect.</span></a></li>
+        </ul>
+    </section>
 
     <p class="support">Questions or something not working?
         <a id="support-link" href="#">Email support</a>
