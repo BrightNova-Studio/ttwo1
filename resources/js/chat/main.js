@@ -11,7 +11,9 @@ const support = gate.dataset.support;
 const steps = { 1: $('#step-1'), 2: $('#step-2'), 3: $('#step-3') };
 const dots = $$('.steps li');
 const note = $('#gate-note');
-const SECRET_MIN = 10;
+const SECRET_MIN = 5;
+const SECRET_MAX = 40;
+const glyphs = (s) => [...String(s)].length; // every character counts as one, spaces included
 
 const S = { chatId: '', memberId: '', session: null };
 
@@ -126,7 +128,7 @@ function paintPhraseStep() {
   if (mode === 'choose') {
     label.innerHTML = 'Secret phrase <span class="opt">optional</span>';
     input.placeholder = 'Leave empty to skip';
-    hint.textContent = 'Add a phrase (at least ' + SECRET_MIN + ' characters) and your partner must type the same one to get in. It never leaves your device and cannot be recovered. Leave it empty if you would rather not use one.';
+    hint.textContent = 'Add a phrase of ' + SECRET_MIN + ' to ' + SECRET_MAX + ' characters (spaces count as one) and your partner must type the same one to get in. It never leaves your device and cannot be recovered. Leave it empty if you would rather not use one.';
   } else if (mode === 'enter') {
     label.innerHTML = 'Secret phrase';
     input.placeholder = 'The phrase you agreed on';
@@ -174,7 +176,8 @@ steps[3].addEventListener('submit', async (e) => {
   const first = mode === 'choose';
   const typed = $('#secret').value;
   if (mode === 'enter' && !typed) return fail(steps[3], 'Enter the secret phrase your partner set.');
-  if (first && typed && typed.length < SECRET_MIN) return fail(steps[3], 'Use at least ' + SECRET_MIN + ' characters so it is hard to guess, or leave it empty to skip.');
+  if (typed && glyphs(typed) > SECRET_MAX) return fail(steps[3], 'The secret phrase can be at most ' + SECRET_MAX + ' characters.');
+  if (first && typed && glyphs(typed) < SECRET_MIN) return fail(steps[3], 'Use ' + SECRET_MIN + ' to ' + SECRET_MAX + ' characters (spaces count), or leave it empty to skip.');
   // No phrase anywhere: a fixed value stands in. Messages are still encrypted, but the key is not secret.
   const usePhrase = mode === 'none' ? false : !!typed;
   const secret = usePhrase ? typed : C.NO_PHRASE;
