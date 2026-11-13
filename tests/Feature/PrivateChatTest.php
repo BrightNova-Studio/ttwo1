@@ -616,7 +616,7 @@ class PrivateChatTest extends TestCase
         foreach ($xml->url as $u) {
             $all[] = (string) $u->loc;
         }
-        $this->assertCount(8, $all);
+        $this->assertCount(9, $all);
         foreach (['/', '/private-chat-room', '/temporary-chat-room', '/anonymous-chat', '/faq', '/privacy'] as $p) {
             $this->assertContains(rtrim(config('app.url'), '/').$p, $all);
         }
@@ -624,6 +624,50 @@ class PrivateChatTest extends TestCase
         $robots = file_get_contents(public_path('robots.txt'));
         $this->assertStringContainsString('Sitemap: https://1two1.thesecretbasket.in/sitemap.xml', $robots);
         $this->assertStringContainsString('Disallow: /api/', $robots);
+    }
+
+    /* ------------------------------------------------------ Android app */
+
+    public function test_android_version_is_read_from_the_user_agent(): void
+    {
+        $this->assertSame(['versionName' => '1.2.3', 'versionCode' => 12], \App\Support\AndroidRelease::fromUserAgent('Mozilla/5.0 Chrome/1 1two1-android/1.2.3 (12)'));
+        $this->assertNull(\App\Support\AndroidRelease::fromUserAgent('Mozilla/5.0 Chrome/1'));
+        $this->assertNull(\App\Support\AndroidRelease::fromUserAgent(null));
+    }
+
+    public function test_download_button_is_on_the_home_page_only_and_hidden_inside_the_app(): void
+    {
+        $release = \App\Support\AndroidRelease::current();
+        $this->assertNotNull($release, 'run android-app/scripts/release.mjs first');
+
+        $home = $this->get('/')->assertOk();
+        $home->assertSee('Get the Android app')->assertSee('/downloads/'.$release['file'], false);
+
+        foreach (['/how-it-works', '/faq', '/privacy', '/private-chat-room'] as $url) {
+            $this->get($url)->assertDontSee('Get the Android app')->assertDontSee('.apk', false);
+        }
+
+        $inApp = $this->withHeader('User-Agent', 'Mozilla/5.0 1two1-android/'.$release['versionName'].' ('.$release['versionCode'].')')->get('/');
+        $inApp->assertDontSee('Get the Android app')->assertDontSee('Update available');
+    }
+
+    public function test_an_older_app_is_told_to_update(): void
+    {
+        $release = \App\Support\AndroidRelease::current();
+        $this->withHeader('User-Agent', 'Mozilla/5.0 1two1-android/0.0.1 (0)')->get('/')
+            ->assertSee('Update available: '.$release['versionName']);
+    }
+
+    public function test_android_page_shows_checksums_and_stays_cookie_free(): void
+    {
+        $release = \App\Support\AndroidRelease::current();
+        $r = $this->get('/android')->assertOk();
+        $r->assertSee($release['sha256'])->assertSee('Install in three steps');
+        $this->assertCount(0, $r->headers->getCookies());
+        $this->assertSame(64, strlen($release['sha256']));
+        $this->assertSame(64, strlen($release['signingCertSha256']));
+        $this->assertFileExists(public_path('downloads/'.$release['file']));
+        $this->assertSame($release['sha256'], hash_file('sha256', public_path('downloads/'.$release['file'])), 'the published checksum matches the file');
     }
 
     public function test_ids_are_short_and_memorable(): void

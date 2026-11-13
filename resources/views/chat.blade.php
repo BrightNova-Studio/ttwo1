@@ -24,6 +24,14 @@
 <main id="gate" class="gate" data-support="{{ $supportEmail }}" data-temp="{{ $modes['temp'] }}" data-long="{{ $modes['long'] }}">
     <div id="tip" class="tip" hidden></div>
 
+    @if (! empty($androidUpdate))
+        {{-- Shown only inside the Android app, when a newer version has been published. --}}
+        <a class="app-update" href="/downloads/{{ $androidUpdate['file'] }}">
+            <b>Update available: {{ $androidUpdate['versionName'] }}</b>
+            <span>You have {{ $androidUpdate['installed'] }}. Tap to download the new version.</span>
+        </a>
+    @endif
+
     <section class="card" aria-live="polite">
         <div class="brand">@include('partials.brand', ['u' => 'c'])</div>
 
@@ -156,6 +164,17 @@
         <a href="/privacy" target="_blank" rel="noopener">Privacy</a>
         <a href="/faq" target="_blank" rel="noopener">FAQ</a>
     </nav>
+
+    @if (! empty($android))
+        <div class="getapp-wrap">
+            <a class="getapp" href="/downloads/{{ $android['file'] }}" download="1two1-{{ $android['versionName'] }}.apk" rel="nofollow">
+                <span class="getapp-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M17.6 9.48l1.84-3.18c.16-.31.04-.69-.26-.85a.637.637 0 00-.83.22l-1.88 3.24a11.463 11.463 0 00-8.94 0L5.65 5.67a.643.643 0 00-.87-.2c-.28.18-.37.54-.22.83L6.4 9.48A10.78 10.78 0 003 18h18a10.78 10.78 0 00-3.4-8.52zM7 15.25a1.25 1.25 0 110-2.5 1.25 1.25 0 010 2.5zm10 0a1.25 1.25 0 110-2.5 1.25 1.25 0 010 2.5z"/></svg></span>
+                <span class="getapp-text"><b>Get the Android app</b><small>Version {{ $android['versionName'] }} &middot; {{ number_format($android['size'] / 1048576, 1) }} MB &middot; Android {{ $android['minAndroid'] }}+</small></span>
+                <span class="getapp-dl" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="m7 11 5 5 5-5"/><path d="M5 20h14"/></svg></span>
+            </a>
+            <a class="getapp-more" href="/android" target="_blank" rel="noopener">Install steps, checksum and version history</a>
+        </div>
+    @endif
 
     <section class="about" aria-labelledby="about-h">
         <h2 id="about-h">Private chat rooms for two people</h2>

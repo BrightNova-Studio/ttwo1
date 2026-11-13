@@ -16,6 +16,7 @@ class InfoController extends Controller
         'modes' => ['/temp-vs-long', 'info.modes', '0.7'],
         'privacy' => ['/privacy', 'info.privacy', '0.6'],
         'faq' => ['/faq', 'info.faq', '0.7'],
+        'android' => ['/android', 'info.android', '0.8'],
     ];
 
     public function show(Request $request, string $page)
@@ -25,6 +26,8 @@ class InfoController extends Controller
 
         return view(self::PAGES[$page][1], [
             'path' => self::PAGES[$page][0],
+            'android' => $page === 'android' ? \App\Support\AndroidRelease::current() : null,
+            'history' => $page === 'android' ? \App\Support\AndroidRelease::history() : [],
             'supportEmail' => config('chat.support_email'),
             'temp' => (int) config('chat.modes.temp.seconds') / 60,
             'long' => (int) config('chat.modes.long.seconds') / 86400,

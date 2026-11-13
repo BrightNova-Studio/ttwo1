@@ -7,6 +7,7 @@ use App\Models\Member;
 use App\Models\Message;
 use App\Models\Room;
 use App\Models\RoomEvent;
+use App\Support\AndroidRelease;
 use App\Support\Ids;
 use App\Support\RoomLifecycle;
 use Illuminate\Http\JsonResponse;
@@ -27,7 +28,13 @@ class ChatController extends Controller
         $request->attributes->set('seo', ['index' => true]);
         RoomLifecycle::sweepSoon();
 
+        // The download button is for the website only. Inside the app we show an update notice instead, if one is due.
+        $installed = AndroidRelease::fromUserAgent($request->userAgent());
+        $release = AndroidRelease::current();
+
         return view('chat', [
+            'android' => $installed ? null : $release,
+            'androidUpdate' => ($installed && $release && $release['versionCode'] > $installed['versionCode']) ? $release + ['installed' => $installed['versionName']] : null,
             'supportEmail' => config('chat.support_email'),
             'modes' => [
                 'temp' => (int) config('chat.modes.temp.seconds'),

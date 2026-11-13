@@ -1,0 +1,19 @@
+{
+  "name": "1two1-android",
+  "version": "1.0.0",
+  "private": true,
+  "description": "1two1 Android app: a hardened native shell around https://1two1.thesecretbasket.in",
+  "scripts": {
+    "sync": "cap sync android",
+    "assets": "capacitor-assets generate --android",
+    "release": "node scripts/release.mjs"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.6.2",
+    "@capacitor/core": "^8.6.2"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^8.6.2"
+  }
+}

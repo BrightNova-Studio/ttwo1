@@ -28,7 +28,7 @@
     "src": "node_modules/@fontsource-variable/inter/files/inter-vietnamese-wght-normal.woff2"
   },
   "resources/css/info.css": {
-    "file": "assets/info-R0Aeo8dT.css",
+    "file": "assets/info-Dv6nMqwm.css",
     "name": "info",
     "names": [
       "info.css"
@@ -64,12 +64,12 @@
     ]
   },
   "resources/js/chat/main.js": {
-    "file": "assets/main-Z3z9_tWD.js",
+    "file": "assets/main-DyPErQ3S.js",
     "name": "main",
     "src": "resources/js/chat/main.js",
     "isEntry": true,
     "css": [
-      "assets/main-CxSZT-UW.css"
+      "assets/main-Ci8cYemW.css"
     ],
     "assets": [
       "assets/inter-cyrillic-ext-wght-normal-BOeWTOD4.woff2",

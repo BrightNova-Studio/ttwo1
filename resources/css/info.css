@@ -97,3 +97,13 @@ tr:last-child td { border-bottom: 0; }
   .steps li::before { left: 16px; top: 18px; }
   .doc { padding-top: 36px; }
 }
+
+/* ------------------------------------------------------- android page */
+.appbox { padding: 24px; }
+.appbox-top { display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap; }
+.appbox h2 { margin-bottom: 4px; }
+.kv { display: grid; gap: 4px; margin: 12px 0; }
+.kv dt { margin-top: 12px; font-size: 12px; font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase; color: var(--mut); }
+.kv dd { margin: 0; }
+code.block { display: block; padding: 12px 14px; border-radius: 12px; word-break: break-all; font-size: 13px; line-height: 1.5; user-select: all; }
+.small { font-size: 13.5px; margin-top: 10px; }

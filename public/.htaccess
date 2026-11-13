@@ -1,6 +1,16 @@
 # Pin PHP 8.4 for this site (ServerByte reads the handler from .htaccess).
 AddHandler x-httpd-php84 .php
 
+# Android app downloads: correct type, always saved as a file, never sniffed or cached stale.
+AddType application/vnd.android.package-archive .apk
+<IfModule mod_headers.c>
+    <FilesMatch "\.apk$">
+        Header set Content-Disposition "attachment"
+        Header set X-Content-Type-Options "nosniff"
+        Header set Cache-Control "no-cache"
+    </FilesMatch>
+</IfModule>
+
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes

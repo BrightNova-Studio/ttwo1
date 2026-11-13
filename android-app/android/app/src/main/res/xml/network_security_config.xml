@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Network rules for 1two1:
+  - plain HTTP is refused everywhere;
+  - only the phone's built-in certificate authorities are trusted (never certificates a user or app installed);
+  - connections to our site must also match a pinned Let's Encrypt / ISRG key. The pin-set expires on the date
+    below as a safety net: after that the pins are ignored rather than locking everyone out, so a new app
+    version with fresh pins must be released before then (see android-app/README.md).
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="false">1two1.thesecretbasket.in</domain>
+        <pin-set expiration="2027-05-01">
+            <!-- Let's Encrypt intermediate "YR2" and root "Root YR" (current chain) -->
+            <pin digest="SHA-256">nWN7PSep5XDQdge5zK24CnCRXHr3KvzhKEGxsdqCX9E=</pin>
+            <pin digest="SHA-256">fk6IOKit1ild5647BH06ujSIq5XbCgqlbYl6ANhhi88=</pin>
+            <!-- ISRG Root X1 and X2: long-lived roots that Let's Encrypt chains lead back to (backup pins) -->
+            <pin digest="SHA-256">C5+lpZ7tcVwmwQIMcRtPbsQtWLABXhQzejna0wHFr8M=</pin>
+            <pin digest="SHA-256">diGVwiVYbubAI3RW4hB9xU8e/CH2GnkuvVFZE8zmgzI=</pin>
+        </pin-set>
+    </domain-config>
+</network-security-config>

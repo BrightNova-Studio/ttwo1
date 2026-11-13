@@ -24,3 +24,11 @@ _ide_helper.php
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Android app: never commit signing keys, build output or tooling
+/android-app/node_modules
+/android-app/android/keystore.properties
+*.jks
+*.keystore
+/public/downloads/*.apk
+/public/downloads/*.aab

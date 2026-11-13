@@ -1,0 +1,14 @@
+{
+  "name": "1two1",
+  "package": "in.thesecretbasket.onetwoone",
+  "versionName": "1.0.0",
+  "versionCode": 1,
+  "minAndroid": "7.0",
+  "size": 2725348,
+  "sha256": "330c6a37429eb552ff58b6f0300638d1a1e24ecfddeaac68dc0f84bf4f45ce3a",
+  "signingCertSha256": "44a3c66c0455fcda0deec1341cb39f11cf28f31476fea1c739760c840241e419",
+  "file": "1two1.apk",
+  "versionedFile": "1two1-1.0.0.apk",
+  "released": "2026-11-13",
+  "notes": "First release."
+}

@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">1two1</string>
+    <string name="title_activity_main">1two1</string>
+    <string name="package_name">in.thesecretbasket.onetwoone</string>
+    <string name="custom_url_scheme">in.thesecretbasket.onetwoone</string>
+</resources>

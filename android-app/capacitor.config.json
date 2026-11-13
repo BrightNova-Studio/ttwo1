@@ -1,0 +1,21 @@
+{
+  "appId": "in.thesecretbasket.onetwoone",
+  "appName": "1two1",
+  "webDir": "www",
+  "backgroundColor": "#050508",
+  "server": {
+    "url": "https://1two1.thesecretbasket.in",
+    "cleartext": false,
+    "allowNavigation": [
+      "1two1.thesecretbasket.in"
+    ],
+    "errorPath": "error.html"
+  },
+  "android": {
+    "allowMixedContent": false,
+    "captureInput": false,
+    "webContentsDebuggingEnabled": false,
+    "loggingBehavior": "none",
+    "appendUserAgent": "1two1-android/1.0.0 (1)"
+  }
+}
