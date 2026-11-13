@@ -37,7 +37,7 @@ class InfoController extends Controller
     /** sitemap.xml: every public page, with the date its template last changed. */
     public function sitemap(Request $request)
     {
-        $request->attributes->set('seo', ['cache' => true]);
+        $request->attributes->set('seo', ['index' => true, 'cache' => true]);
         $base = rtrim(config('app.url'), '/');
         $home = max(filemtime(resource_path('views/chat.blade.php')), filemtime(resource_path('views/partials/seo.blade.php')));
 
