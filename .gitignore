@@ -32,3 +32,6 @@ Thumbs.db
 *.keystore
 /public/downloads/*.apk
 /public/downloads/*.aab
+
+# How-to videos: large files, copied to the server by scp (captions, posters and videos.json are in git)
+/public/videos/*.mp4

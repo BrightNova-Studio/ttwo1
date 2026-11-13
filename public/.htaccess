@@ -11,6 +11,16 @@ AddType application/vnd.android.package-archive .apk
     </FilesMatch>
 </IfModule>
 
+# How-to videos: right type, cacheable, seekable.
+AddType video/mp4 .mp4
+AddType text/vtt .vtt
+<IfModule mod_headers.c>
+    <FilesMatch "\.(mp4|vtt|jpg)$">
+        Header set X-Content-Type-Options "nosniff"
+        Header set Cache-Control "public, max-age=86400"
+    </FilesMatch>
+</IfModule>
+
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes

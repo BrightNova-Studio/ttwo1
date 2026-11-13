@@ -505,9 +505,41 @@ label.agree input { flex: none; width: 20px; height: 20px; margin-top: 1px; acce
 .about h2 { font-size: 18px; letter-spacing: -0.01em; color: var(--text); margin-bottom: 8px; }
 .about > p { font-size: 13.5px; line-height: 1.6; margin-bottom: 14px; }
 .about ul { list-style: none; padding: 0; display: grid; gap: 8px; }
-.about li a { display: flex; flex-direction: column; gap: 2px; padding: 12px 14px; border-radius: 14px; background: rgba(255, 255, 255, 0.035); border: 1px solid var(--line); text-decoration: none; color: var(--mut); font-size: 12.5px; transition: border-color 0.2s, background 0.2s; }
-.about li a:hover { border-color: rgba(124, 108, 255, 0.5); background: rgba(124, 108, 255, 0.08); }
-.about li a b { color: var(--text); font-size: 14px; }
+/* Video cards: thumbnail with play button on the left, title and info on the right, then "Watch" and "Read more". */
+.vcard { display: grid; grid-template-columns: 138px 1fr; gap: 14px; align-items: center; padding: 10px; border-radius: 18px; background: rgba(255, 255, 255, 0.035); border: 1px solid var(--line); transition: border-color 0.2s, background 0.2s, transform 0.2s var(--ease); }
+.vcard:hover { border-color: rgba(124, 108, 255, 0.5); background: rgba(124, 108, 255, 0.07); }
+.vthumb { position: relative; display: block; aspect-ratio: 16 / 9; border-radius: 12px; overflow: hidden; background: #0b0b14; border: 1px solid var(--line2); box-shadow: 0 10px 24px -14px rgba(0, 0, 0, 0.9); }
+.vthumb img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.4s var(--ease), filter 0.3s;  }
+.vcard:hover .vthumb img { transform: scale(1.06); filter: saturate(1.1) brightness(1); }
+.vplay { position: absolute; right: 6px; bottom: 6px; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; color: #fff; background: linear-gradient(135deg, #7c6cff, #38a0ff); box-shadow: 0 6px 20px rgba(124, 108, 255, 0.6), 0 0 0 5px rgba(255, 255, 255, 0.14); transition: transform 0.2s var(--ease); }
+.vplay svg { margin-left: 2px; width: 16px; height: 16px; }
+.vthumb:hover .vplay, .vthumb:focus-visible .vplay { transform: scale(1.12); }
+.vdur { position: absolute; left: 6px; bottom: 7px; padding: 1px 6px; border-radius: 999px; font-size: 10.5px; font-weight: 600; color: #fff; background: rgba(0, 0, 0, 0.72); }
+.vtext { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.vtitle { display: flex; flex-direction: column; gap: 2px; text-decoration: none; color: var(--mut); font-size: 12.5px; line-height: 1.4; }
+.vtitle b { color: var(--text); font-size: 14.5px; }
+.vtitle:hover b { color: #cfc8ff; }
+.vlinks { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 12px; }
+.vwatch { display: inline-flex; align-items: center; gap: 6px; padding: 6px 11px; border-radius: 999px; font-size: 12px; font-weight: 600; color: #e8e4ff; background: rgba(124, 108, 255, 0.2); border: 1px solid rgba(160, 148, 255, 0.4); cursor: pointer; transition: background 0.2s, transform 0.15s; }
+.vwatch:hover { background: rgba(124, 108, 255, 0.4); }
+.vwatch:active { transform: scale(0.96); }
+.vmore { font-size: 12px; color: var(--mut); text-decoration: none; }
+.vmore:hover { color: var(--text); text-decoration: underline; }
+@media (max-width: 380px) { .vcard { grid-template-columns: 112px 1fr; gap: 10px; } .vplay { width: 30px; height: 30px; } }
+
+/* video player window */
+.vmodal { z-index: 120; background: rgba(0, 0, 0, 0.82); }
+.vbox { width: min(960px, 100%); max-height: 100%; display: flex; flex-direction: column; gap: 10px; padding: 12px; border-radius: 22px; background: var(--solid); border: 1px solid var(--line2); box-shadow: 0 30px 80px rgba(0, 0, 0, 0.75); transform: scale(0.96); transition: transform 0.25s var(--ease); }
+.vmodal.in .vbox { transform: none; }
+.vhead { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 2px 4px 0 6px; }
+.vhead b { font-size: 14px; color: var(--text); }
+.vbox video { width: 100%; max-height: calc(100dvh - 190px); aspect-ratio: 16 / 9; border-radius: 14px; background: #000; display: block; }
+.vfail { font-size: 13px; color: #ffc46b; padding: 0 6px; }
+.vfail a { color: #cfc8ff; }
+.vfoot { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px 12px; padding: 0 6px 2px; font-size: 12px; color: var(--mut); }
+.vfoot a { color: #cfc8ff; }
+body.has-modal { overflow: hidden; }
+
 
 /* ------------------------------------------------- android download (home only) */
 .getapp-wrap { width: min(440px, 100%); display: grid; gap: 8px; justify-items: center; animation: rise 1s var(--ease) 0.22s both; }

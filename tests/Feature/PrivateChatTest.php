@@ -679,6 +679,22 @@ class PrivateChatTest extends TestCase
 
     /* ------------------------------------------------------ Android app */
 
+    public function test_home_page_lists_the_how_to_videos_that_exist(): void
+    {
+        $dir = public_path('videos');
+        $this->assertDirectoryExists($dir);
+        $res = $this->get('/')->assertOk();
+        foreach (['temp-room', 'long-term-room', 'random-connect'] as $slug) {
+            if (is_file("$dir/$slug.mp4")) {
+                $res->assertSee("/videos/$slug.mp4", false)->assertSee("/videos/$slug-poster.jpg", false);
+            } else {
+                $res->assertDontSee("/videos/$slug.mp4", false); // never show a player for a file that is not there
+            }
+        }
+        $res->assertSee('/private-chat-room', false)->assertSee('/temporary-chat-room', false)->assertSee('/anonymous-chat', false);
+        $this->assertStringContainsString("media-src 'self'", $res->headers->get('Content-Security-Policy'));
+    }
+
     public function test_android_version_is_read_from_the_user_agent(): void
     {
         $this->assertSame(['versionName' => '1.2.3', 'versionCode' => 12], \App\Support\AndroidRelease::fromUserAgent('Mozilla/5.0 Chrome/1 1two1-android/1.2.3 (12)'));

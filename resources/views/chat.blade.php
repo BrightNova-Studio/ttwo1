@@ -15,6 +15,9 @@
             ['@context' => 'https://schema.org', '@type' => 'WebApplication', 'name' => '1two1', 'url' => rtrim(config('app.url'), '/').'/', 'applicationCategory' => 'CommunicationApplication', 'operatingSystem' => 'Any (web browser)', 'browserRequirements' => 'Requires a modern browser with JavaScript and Web Crypto', 'inLanguage' => 'en', 'isAccessibleForFree' => true, 'offers' => ['@type' => 'Offer', 'price' => '0', 'priceCurrency' => 'USD'], 'featureList' => ['End-to-end encrypted (AES-256-GCM)', 'No account or app needed', 'Temp rooms that delete themselves 30 minutes after both people leave', 'Long-term rooms that last 30 days', 'Random connect with strangers', 'View-once and disappearing messages']],
         ],
     ])
+    @foreach ($videoLd as $ld)
+    <script type="application/ld+json">{!! json_encode($ld, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP) !!}</script>
+    @endforeach
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     @vite(['resources/js/chat/main.js'])
 </head>
@@ -179,10 +182,30 @@
     <section class="about" aria-labelledby="about-h">
         <h2 id="about-h">Private chat rooms for two people</h2>
         <p>1two1 gives two people a private place to talk, with no sign-up and nothing to install. Messages are end-to-end encrypted in your browser, so not even we can read them.</p>
-        <ul>
-            <li><a href="/private-chat-room"><b>Private chat room</b><span>A locked room with exactly two keys.</span></a></li>
-            <li><a href="/temporary-chat-room"><b>Temporary chat room</b><span>Deletes itself 30 minutes after you both leave.</span></a></li>
-            <li><a href="/anonymous-chat"><b>Anonymous chat</b><span>Meet someone new, safely, with Random connect.</span></a></li>
+        <ul class="vcards">
+            @foreach ($guides as $g)
+                <li class="vcard">
+                    @if ($g['ready'])
+                        <a class="vthumb" href="{{ $g['mp4'] }}" data-video="{{ $g['mp4'] }}" data-poster="{{ $g['poster'] }}" @if ($g['vtt']) data-captions="{{ $g['vtt'] }}" @endif data-title="{{ $g['video'] }}" data-page="{{ $g['page'] }}" aria-label="Watch the video: {{ $g['video'] }} ({{ $g['length'] }})">
+                            <img src="{{ $g['thumb'] }}" alt="" width="640" height="360" loading="lazy">
+                            <span class="vplay" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg></span>
+                            <span class="vdur">{{ $g['length'] }}</span>
+                        </a>
+                    @endif
+                    <div class="vtext">
+                        <a class="vtitle" href="{{ $g['page'] }}"><b>{{ $g['title'] }}</b><span>{{ $g['info'] }}</span></a>
+                        @if ($g['ready'])
+                            <div class="vlinks">
+                                <button type="button" class="vwatch" data-video="{{ $g['mp4'] }}" data-poster="{{ $g['poster'] }}" @if ($g['vtt']) data-captions="{{ $g['vtt'] }}" @endif data-title="{{ $g['video'] }}" data-page="{{ $g['page'] }}">
+                                    <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg>
+                                    Watch the video &middot; {{ $g['length'] }}
+                                </button>
+                                <a class="vmore" href="{{ $g['page'] }}">Read more</a>
+                            </div>
+                        @endif
+                    </div>
+                </li>
+            @endforeach
         </ul>
     </section>
 

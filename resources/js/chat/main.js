@@ -4,6 +4,7 @@ import { api, setToken } from './api.js';
 import { startChat } from './chat.js';
 import { startSearch } from './random.js';
 import { icon } from './icons.js';
+import './videos.js';
 import { $, $$, h, toast, unlockAudio } from './util.js';
 
 const gate = $('#gate');

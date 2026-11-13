@@ -21,6 +21,7 @@ class SecurityHeaders
             "script-src 'self'",
             "style-src 'self'",
             "img-src 'self' data:",
+            "media-src 'self'",
             "font-src 'self'",
             "connect-src 'self'",
             "manifest-src 'none'",

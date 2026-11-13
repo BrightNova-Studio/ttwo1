@@ -8,6 +8,7 @@ use App\Models\Message;
 use App\Models\Room;
 use App\Models\RoomEvent;
 use App\Support\AndroidRelease;
+use App\Support\Guides;
 use App\Support\Ids;
 use App\Support\RoomLifecycle;
 use Illuminate\Http\JsonResponse;
@@ -32,10 +33,14 @@ class ChatController extends Controller
         $installed = AndroidRelease::fromUserAgent($request->userAgent());
         $release = AndroidRelease::current();
 
+        $guides = Guides::all();
+
         return view('chat', [
+            'videoLd' => Guides::jsonLd($guides),
             'android' => $installed ? null : $release,
             'androidUpdate' => ($installed && $release && $release['versionCode'] > $installed['versionCode']) ? $release + ['installed' => $installed['versionName']] : null,
             'supportEmail' => config('chat.support_email'),
+            'guides' => $guides,
             'modes' => [
                 'temp' => (int) config('chat.modes.temp.seconds'),
                 'long' => (int) config('chat.modes.long.seconds'),
