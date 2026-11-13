@@ -41,6 +41,9 @@
     <div class="stat"><b>{{ $period['expired_long'] }}</b><span>Long-term expired</span></div>
     <div class="stat"><b>{{ $period['created_self'] }}</b><span>Opened by members</span></div>
     <div class="stat"><b>{{ $period['removed'] }}</b><span>Deleted by operator</span></div>
+    <div class="stat"><b>{{ $period['created_random'] }}</b><span>Random matches</span></div>
+    <div class="stat"><b>{{ $period['ended'] }}</b><span>Ended by a member</span></div>
+    <div class="stat"><b>{{ $period['reported'] }}</b><span>Reported by a member</span></div>
 </div>
 
 <div class="panel pad chart">
@@ -75,6 +78,8 @@
     <div class="stat live"><b>{{ $now['live'] }}</b><span>Someone online</span></div>
     <div class="stat"><b>{{ $now['paired'] }}</b><span>Both members joined</span></div>
     <div class="stat"><b>{{ $now['locked'] }}</b><span>Secret phrase set</span></div>
+    <div class="stat"><b>{{ $now['random'] }}</b><span>Random-connect rooms</span></div>
+    <div class="stat live"><b>{{ $now['searching'] }}</b><span>Searching for a match</span></div>
     <div class="stat"><b>{{ $now['blocked'] }}</b><span>Blocked</span></div>
     <div class="stat"><b>{{ $ttl['temp'] / 60 }} min / {{ $ttl['long'] / 86400 }} d</b><span>Expiry after both leave</span></div>
 </div>

@@ -10,7 +10,7 @@ const DISAPPEAR = [
 ];
 const IDLE_CHOICES = [[2, '2 min'], [5, '5 min'], [10, '10 min'], [30, '30 min'], [0, 'Never']];
 
-export function startChat({ session, key, onExit }) {
+export function startChat({ session, key, onExit, random = null }) {
   const S = {
     slot: session.slot,
     rev: 0,
@@ -109,7 +109,7 @@ export function startChat({ session, key, onExit }) {
     el.style.setProperty('--h', av ? av.h : avatarHue(name));
   }
   const meName = () => S.nick || 'You';
-  const theirName = () => S.peerNick || 'Your partner';
+  const theirName = () => S.peerNick || (random ? 'Stranger' : 'Your partner');
 
   function paintPeer(p) {
     const name = theirName();
@@ -359,7 +359,7 @@ export function startChat({ session, key, onExit }) {
   /* -------------------------------------------------------------- polling */
   function authFail(e) {
     if (e.status === 401 || e.status === 403) {
-      exit(e.code === 'room_unavailable' ? 'room_unavailable' : e.code || 'session_ended', true);
+      exit(e.code === 'room_unavailable' ? (random ? 'partner_left' : 'room_unavailable') : e.code || 'session_ended', true);
       return true;
     }
     return false;
@@ -746,6 +746,8 @@ export function startChat({ session, key, onExit }) {
           h('button', { class: 'btn ghost block', type: 'button', onclick: () => exit('hidden') }, h('span', { html: icon('eyeoff') }), 'Hide now (Esc Esc)')),
         h('section', {}, h('h4', {}, 'Conversation'),
           h('button', { class: 'btn danger-ghost block', type: 'button', onclick: clearChat }, h('span', { html: icon('trash') }), 'Clear chat for both'),
+          random ? h('button', { class: 'btn danger-ghost block', type: 'button', onclick: () => endRandom(false) }, h('span', { html: icon('logout') }), 'End chat for both') : null,
+          random ? h('button', { class: 'btn danger-ghost block', type: 'button', onclick: () => endRandom(true) }, h('span', { html: icon('warn') }), 'Report and end chat') : null,
           h('button', { class: 'btn ghost block', type: 'button', onclick: () => exit('left') }, h('span', { html: icon('logout') }), 'Leave the room')),
         h('div', { class: 'enc-card' }, h('span', { html: icon('shield') }),
           h('p', {}, 'AES-256 encryption with a key made from your shared secret on this device. The server and the host only store scrambled data they cannot open.'))));
@@ -755,6 +757,20 @@ export function startChat({ session, key, onExit }) {
     drawer.hidden = !open;
     scrim.hidden = !open;
     requestAnimationFrame(() => { drawer.classList.toggle('in', open); scrim.classList.toggle('in', open); });
+  }
+
+  async function endRandom(report) {
+    const ok = await confirmBox({
+      title: report ? 'Report and end this chat?' : 'End this chat?',
+      text: report
+        ? 'The chat ends for both of you and every message is erased. We count the report, but we cannot read the conversation, so keep a note of anything serious and contact the authorities if someone is in danger.'
+        : 'The chat ends for both of you and every message is erased. You can look for someone new afterwards.',
+      yes: report ? 'Report and end' : 'End chat',
+      danger: true,
+    });
+    if (!ok) return;
+    try { await api('POST', '/room/end', { report: !!report }); } catch (e) { if (!authFail(e)) { toast('Could not end the chat.', 'warn'); return; } }
+    exit('ended', true);
   }
 
   async function clearChat() {
@@ -769,7 +785,7 @@ export function startChat({ session, key, onExit }) {
   }
 
   /* ------------------------------------------------------------- lifecycle */
-  const reasonsServerSide = new Set(['session_ended', 'session_expired', 'signed_out', 'room_unavailable']);
+  const reasonsServerSide = new Set(['session_ended', 'session_expired', 'signed_out', 'room_unavailable', 'partner_left', 'ended']);
 
   function leaveNow() {
     api('POST', '/leave', {}, { keepalive: true }).catch(() => {});
@@ -849,6 +865,9 @@ export function startChat({ session, key, onExit }) {
     S.nick = (mine && mine.n) || '';
     S.avatar = cleanAvatar(mine && mine.a);
     buildDrawer();
+    if (random) {
+      note('You are talking to a stranger. Never share personal details, photos or money. Safety code: ' + random.safety + '. If your partner sees the same code, nobody is in between.', 'shield');
+    }
     paintPeer(session.peer);
     updateTitle();
     ta.focus();

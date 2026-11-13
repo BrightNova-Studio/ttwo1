@@ -40,6 +40,9 @@
     <dt>What we can still observe</dt>
     <dd>Like any website, the server must know a request arrived: the time, the size of a message and that a room is active. Your IP address is used briefly to limit abuse (for example, how many rooms one person can create per hour). Hosting providers may keep standard server access logs for a short period.</dd>
 
+    <dt>Random connect</dt>
+    <dd>While you wait for a match we hold a short-lived waiting ticket: your chosen topic and a one-time public key your browser made. It is erased when you stop, when you are matched (within minutes), or if you close the tab. The match gets a fresh Temp room, and the two browsers agree the secret between themselves, so we cannot read what you say. You are asked to confirm you are 18 or older, and either of you can end or report the chat. Reports are counted without any message content.</dd>
+
     <dt>Protection against guessing</dt>
     <dd>Codes are short so people can remember them. To keep them safe, 8 wrong tries on a room lock it for 15 minutes, each device is rate-limited, and your secret phrase, not the codes, is what actually encrypts your messages.</dd>
 

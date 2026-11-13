@@ -58,7 +58,7 @@ class OperatorController extends Controller
         }
         foreach ($events as $e) {
             $k = $e->created_at->timezone($tz)->format($fmt);
-            if (isset($series[$k])) {
+            if (isset($series[$k][$e->event])) {
                 $series[$k][$e->event]++;
             }
         }
@@ -82,6 +82,9 @@ class OperatorController extends Controller
                 'expired_temp' => $count('expired', 'temp'),
                 'expired_long' => $count('expired', 'long'),
                 'removed' => $count('removed'),
+                'created_random' => $events->where('event', 'created')->where('source', 'random')->count(),
+                'ended' => $count('ended'),
+                'reported' => $count('reported'),
             ],
             'now' => [
                 'active' => $rooms->where('status', 'active')->count(),
@@ -91,6 +94,8 @@ class OperatorController extends Controller
                 'live' => $liveNow->count(),
                 'paired' => $rooms->filter(fn ($r) => $r->members->whereNotNull('joined_at')->count() === 2)->count(),
                 'locked' => $rooms->filter(fn ($r) => $r->key_check !== null)->count(),
+                'random' => $rooms->where('source', 'random')->count(),
+                'searching' => \App\Models\MatchTicket::where('status', 'waiting')->where('last_poll_at', '>', now()->subSeconds(15))->count(),
             ],
             'ttl' => ['temp' => RoomLifecycle::seconds('temp'), 'long' => RoomLifecycle::seconds('long')],
         ]);

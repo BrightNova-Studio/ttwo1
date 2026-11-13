@@ -75,6 +75,7 @@
                 <div class="room-title">
                     <b>{{ $r->label ?: 'Room #'.$r->id }}</b>
                     <span @class(['pill', 'mode-temp' => $r->mode === 'temp', 'mode-long' => $r->mode !== 'temp'])>{{ $r->mode === 'temp' ? 'Temp' : 'Long term' }}</span>
+                    @if ($r->source === 'random')<span class="pill mode-long">Random</span>@endif
                     @if ($r->isExpired())
                         <span class="pill off">expired</span>
                     @else
@@ -84,7 +85,7 @@
                 <div class="muted small">
                     Created {{ $r->created_at->diffForHumans() }} ·
                     @if ($r->last_activity_at) last activity {{ $r->last_activity_at->diffForHumans() }} @else no activity yet @endif
-                    · {{ $r->source === 'self' ? 'opened by members' : 'opened by operator' }}
+                    · {{ ['self' => 'opened by members', 'random' => 'random match', 'operator' => 'opened by operator'][$r->source] ?? $r->source }}
                     · auto-deletes {{ $r->dueAt()->diffForHumans() }} if nobody returns
                     @if ($r->disappear_seconds) · vanish {{ $r->disappear_seconds >= 3600 ? ($r->disappear_seconds / 3600).' h' : ($r->disappear_seconds >= 60 ? ($r->disappear_seconds / 60).' min' : $r->disappear_seconds.' s') }} @endif
                     @if ($r->expires_at) · ends {{ $r->expires_at->format('d M Y') }} @endif

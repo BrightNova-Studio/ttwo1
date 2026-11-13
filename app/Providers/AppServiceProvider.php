@@ -17,6 +17,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         // Per signed-in member: generous for the 1-2 second polling, tight enough to stop abuse.
+        RateLimiter::for('match', fn (Request $request) => Limit::perMinute(150)->by('ip:'.$request->ip()));
         RateLimiter::for('member', function (Request $request) {
             $token = $request->bearerToken();
 

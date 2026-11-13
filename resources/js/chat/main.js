@@ -2,6 +2,7 @@ import '../../css/chat.css';
 import * as C from './crypto.js';
 import { api, setToken } from './api.js';
 import { startChat } from './chat.js';
+import { startSearch } from './random.js';
 import { icon } from './icons.js';
 import { $, $$, h, toast, unlockAudio } from './util.js';
 
@@ -46,13 +47,15 @@ $('#memberId').addEventListener('input', (e) => { e.target.value = groupMember(e
 
 /* ----------------------------------------------------------------- steps */
 /* ---------------------------------------------------------------- panes */
-const panes = { join: $('#pane-join'), new: $('#pane-new'), made: $('#pane-made') };
-const tabs = { join: $('#tab-join'), new: $('#tab-new') };
+const panes = { join: $('#pane-join'), new: $('#pane-new'), rand: $('#pane-rand'), made: $('#pane-made') };
+const tabs = { join: $('#tab-join'), new: $('#tab-new'), rand: $('#tab-rand') };
+let search = null; // an active random-connect search, if any
 function showPane(name, focus = true) {
+  if (name !== 'rand' && search) stopSearching();
   Object.entries(panes).forEach(([k, p]) => { p.hidden = k !== name; });
   $('#tabs').hidden = name === 'made';
   Object.entries(tabs).forEach(([k, t]) => {
-    const on = (k === 'join') === (name === 'join');
+    const on = k === name;
     t.classList.toggle('on', on);
     t.setAttribute('aria-selected', String(on));
   });
@@ -61,6 +64,7 @@ function showPane(name, focus = true) {
 }
 tabs.join.addEventListener('click', () => showPane('join'));
 tabs.new.addEventListener('click', () => showPane('new'));
+tabs.rand.addEventListener('click', () => showPane('rand'));
 $$('[data-ico]').forEach((el) => { el.innerHTML = icon(el.dataset.ico); });
 
 function go(n, focus = true) {
@@ -174,6 +178,92 @@ steps[3].addEventListener('submit', async (e) => {
   }
 });
 
+/* ------------------------------------------------------- random connect */
+const randForm = $('#rand-form');
+const randWait = $('#rand-wait');
+let topic = 'any';
+$$('.topic', randForm).forEach((b) => b.addEventListener('click', () => {
+  topic = b.dataset.topic;
+  $$('.topic', randForm).forEach((o) => {
+    o.classList.toggle('on', o === b);
+    o.setAttribute('aria-checked', String(o === b));
+  });
+}));
+$('#rand-adult').addEventListener('change', (e) => { $('#rand-go').disabled = !e.target.checked; });
+
+function showSearching(on) {
+  randForm.hidden = on;
+  randWait.hidden = !on;
+  $('#tabs').hidden = on;
+}
+
+function stopSearching() {
+  if (search) search.cancel();
+  search = null;
+  showSearching(false);
+}
+
+$('#rand-cancel').addEventListener('click', () => { stopSearching(); showPane('rand', false); });
+window.addEventListener('pagehide', () => { if (search) search.cancel(); });
+
+randForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+  if (!$('#rand-adult').checked) return fail(randForm, 'Please confirm that you are 18 or older.');
+  $('.err', randForm).textContent = '';
+  unlockAudio();
+  $('#rand-title').textContent = 'Looking for someone…';
+  $('#rand-count').textContent = '';
+  showSearching(true);
+  search = startSearch({
+    topic,
+    onWaiting: (n) => { $('#rand-count').textContent = n > 1 ? n + ' people are looking right now' : 'You are in line. Waiting for someone else to look…'; },
+    onMatched: (m) => { search = null; connectRandom(m); },
+    onError: (err) => {
+      search = null;
+      showSearching(false);
+      const msg = err.code === 'timeout' ? 'No one else was around just now. Try again in a moment.'
+        : err.code === 'gone' ? 'The search ended. Please try again.'
+        : err.status ? err.message : 'Cannot reach the server. Check your connection.';
+      fail(randForm, msg);
+    },
+  });
+});
+
+/** Matched: sign in to the fresh room, agree the secret with the stranger's browser, open the chat. */
+async function connectRandom(m) {
+  $('#rand-title').textContent = 'Found someone! Securing the chat…';
+  $('#rand-count').textContent = '';
+  try {
+    const session = await api('POST', '/enter', { chat_id: cleanChat(m.key), member_id: cleanMember(m.pass) });
+    setToken(session.token);
+    const secret = await C.sharedSecret(m.pair.priv, m.peer_pub);
+    const safety = await C.safetyCode(m.pair.pub, m.peer_pub);
+    const key = await C.deriveKey(secret, cleanChat(m.key));
+
+    let check = session.key_check;
+    if (!check) {
+      const mine = await C.seal(key, C.KEY_CHECK_VALUE);
+      try {
+        await api('POST', '/key-check', { key_check: mine });
+        check = mine;
+      } catch (err) {
+        if (err.status !== 409) throw err;
+        check = err.data.key_check;
+      }
+    }
+    const v = await C.open(key, check);
+    if (v.k !== C.KEY_CHECK_VALUE.k) throw new Error('mismatch');
+
+    gate.hidden = true;
+    showSearching(false);
+    startChat({ session, key, onExit: onLeave, random: { safety } });
+  } catch {
+    setToken(null);
+    showSearching(false);
+    fail(randForm, 'We could not secure that chat. Please try again.');
+  }
+}
+
 /* ------------------------------------------------------- create a room */
 const MODE_TEXT = {
   temp: 'Best for a quick, private talk. Once you are both offline a 30-minute clock starts, and if neither of you comes back the room and every message are deleted for good.',
@@ -260,6 +350,8 @@ const REASONS = {
   session_ended: ['warn', 'Your session ended. If you did not do this, someone may have used your Pass Code on another device. Tell your partner and contact support.'],
   session_expired: ['info', 'Your session timed out. Sign in again to continue.'],
   signed_out: ['info', 'Please sign in again.'],
+  partner_left: ['info', 'The chat ended. Whenever you like, you can look for someone new.'],
+  ended: ['info', 'You ended the chat. Whenever you like, you can look for someone new.'],
   room_unavailable: ['warn', 'This room is not available. It may have expired or been closed. You can create a new one.'],
 };
 

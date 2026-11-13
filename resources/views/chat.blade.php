@@ -28,7 +28,8 @@
 
         <div id="tabs" class="tabs" role="tablist">
             <button id="tab-join" class="tab on" type="button" role="tab" aria-selected="true">Join a room</button>
-            <button id="tab-new" class="tab" type="button" role="tab" aria-selected="false">Create a room</button>
+            <button id="tab-new" class="tab" type="button" role="tab" aria-selected="false">Create</button>
+            <button id="tab-rand" class="tab" type="button" role="tab" aria-selected="false">Random</button>
         </div>
 
         {{-- ---------------------------------------------------------- join --}}
@@ -87,6 +88,40 @@
                 <button class="btn primary block" type="submit"><span>Create my room</span></button>
                 <p class="learnmore"><a href="/temp-vs-long" target="_blank" rel="noopener">Temp or Long term? See the difference</a></p>
             </form>
+        </div>
+
+        {{-- ------------------------------------------------- random connect --}}
+        <div id="pane-rand" hidden>
+            <form id="rand-form" novalidate>
+                <div class="rand-intro">
+                    <span class="rand-orb" aria-hidden="true"><i></i><i></i><i></i></span>
+                    <div>
+                        <b>Meet someone new</b>
+                        <p>We pair you with another person who is looking right now, in a private Temp room. Anonymous and end-to-end encrypted. Either of you can leave at any moment.</p>
+                    </div>
+                </div>
+
+                <label>What would you like to talk about?</label>
+                <div class="topics" role="radiogroup" aria-label="Topic">
+                    <button type="button" class="topic on" data-topic="any" role="radio" aria-checked="true">Anyone</button>
+                    @foreach (config('chat.random_topics') as $k => $label)
+                        <button type="button" class="topic" data-topic="{{ $k }}" role="radio" aria-checked="false">{{ $label }}</button>
+                    @endforeach
+                </div>
+
+                <label class="agree"><input id="rand-adult" type="checkbox"><span>I am <b>18 or older</b>. I will be kind, and I will not share personal details, photos or money.</span></label>
+                <p class="err" role="alert"></p>
+                <button id="rand-go" class="btn primary block" type="submit" disabled><span>Look for someone</span></button>
+                <p class="learnmore"><a href="/faq#random" target="_blank" rel="noopener">How random connect works and stays safe</a></p>
+            </form>
+
+            <div id="rand-wait" hidden>
+                <div class="radar" aria-hidden="true"><i></i><i></i><i></i><span></span></div>
+                <h3 id="rand-title">Looking for someone…</h3>
+                <p id="rand-count" class="hint"></p>
+                <p class="hint">Keep this tab open. When someone else is looking too, you are connected automatically.</p>
+                <button id="rand-cancel" class="btn ghost block" type="button">Stop looking</button>
+            </div>
         </div>
 
         {{-- ------------------------------------------------- room created --}}

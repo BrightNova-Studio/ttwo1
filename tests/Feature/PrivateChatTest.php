@@ -487,7 +487,88 @@ class PrivateChatTest extends TestCase
             $this->assertCount(0, $r->headers->getCookies());
         }
         $this->get('/temp-vs-long')->assertSee('30 minutes')->assertSee('30 days');
-        $this->get('/')->assertSee('Secret Room Key')->assertSee('Create a room')->assertSee('/privacy', false);
+        $this->get('/')->assertSee('Secret Room Key')->assertSee('Random')->assertSee('/privacy', false);
+    }
+
+    /* ------------------------------------------------------ random connect */
+
+    private function look(string $topic = 'any', array $extra = [])
+    {
+        return $this->postJson('/api/match/join', array_merge(['topic' => $topic, 'pub' => 'pub'.bin2hex(random_bytes(8)), 'adult' => true], $extra));
+    }
+
+    public function test_two_people_looking_at_once_are_paired_into_a_fresh_temp_room(): void
+    {
+        $a = $this->look()->assertCreated();
+        $this->assertSame('waiting', $a->json('status'));
+
+        $b = $this->look()->assertCreated();
+        $this->assertSame('matched', $b->json('status'));
+
+        $pa = $this->postJson('/api/match/poll', ['ticket' => $a->json('ticket')])->assertOk();
+        $this->assertSame('matched', $pa->json('status'));
+        $this->assertSame($pa->json('key'), $b->json('key'), 'both land in the same room');
+        $this->assertNotSame($pa->json('pass'), $b->json('pass'));
+        $this->assertNotSame($pa->json('peer_pub'), $b->json('peer_pub'), 'each gets the other side\'s public key');
+
+        $this->enter($pa->json('key'), $pa->json('pass'))->assertOk()->assertJsonPath('slot', 1);
+        $this->enter($b->json('key'), $b->json('pass'))->assertOk()->assertJsonPath('slot', 2);
+        $room = Room::first();
+        $this->assertSame(['temp', 'random'], [$room->mode, $room->source]);
+        $this->assertSame(1, \App\Models\RoomEvent::where('event', 'created')->where('source', 'random')->count());
+    }
+
+    public function test_nobody_is_matched_with_themselves_and_adults_only_is_enforced(): void
+    {
+        $a = $this->look()->assertCreated();
+        $again = $this->postJson('/api/match/poll', ['ticket' => $a->json('ticket')])->assertOk();
+        $this->assertSame('waiting', $again->json('status'));
+        $this->look('any', ['adult' => false])->assertStatus(422);
+        $this->postJson('/api/match/join', ['topic' => 'nonsense', 'pub' => 'abc', 'adult' => true])->assertStatus(422);
+    }
+
+    public function test_same_topic_is_preferred_and_anyone_matches_everyone(): void
+    {
+        $games = $this->look('games')->json('ticket');
+        $music = $this->look('music')->json('ticket');
+        $this->assertSame('waiting', $this->postJson('/api/match/poll', ['ticket' => $music])->json('status'), 'games and music do not mix');
+
+        $any = $this->look('any')->assertCreated();
+        $this->assertSame('matched', $any->json('status'));
+        $this->assertSame('matched', $this->postJson('/api/match/poll', ['ticket' => $games])->json('status'), 'the one who waited longest is taken first');
+        $this->assertSame('waiting', $this->postJson('/api/match/poll', ['ticket' => $music])->json('status'));
+    }
+
+    public function test_a_closed_tab_is_never_matched_and_old_tickets_are_erased(): void
+    {
+        $this->look();                               // waits, then its owner closes the tab
+        $this->travel(45)->seconds();
+        $this->assertSame('waiting', $this->look()->json('status'), 'the stale ticket is skipped');
+        \App\Support\RoomLifecycle::sweep();
+        $this->assertSame(1, \App\Models\MatchTicket::count(), 'the stale ticket was erased');
+
+        $b = $this->look()->json();                  // matches the live one
+        $this->travel(4)->minutes();
+        \App\Support\RoomLifecycle::sweep();
+        $this->assertSame(0, \App\Models\MatchTicket::count(), 'matched tickets (and the codes in them) do not linger');
+    }
+
+    public function test_either_member_can_end_a_random_chat_and_the_partner_is_told(): void
+    {
+        $a = $this->look()->json();
+        $b = $this->look()->json();
+        $ta = $this->enter($b['key'], $b['pass'])->json('token');
+        $a = $this->postJson('/api/match/poll', ['ticket' => $a['ticket']])->json();
+        $tb = $this->enter($a['key'], $a['pass'])->json('token');
+
+        $this->postJson('/api/room/end', ['report' => true], $this->as($ta))->assertOk();
+        $this->getJson('/api/poll', $this->as($tb))->assertStatus(403)->assertJsonPath('error', 'room_unavailable');
+        $this->assertSame(1, \App\Models\RoomEvent::where('event', 'reported')->count());
+        $this->assertSame(0, Message::count());
+
+        $this->travel(3)->minutes();
+        \App\Support\RoomLifecycle::sweep();
+        $this->assertSame(0, Room::count());
     }
 
     public function test_ids_are_short_and_memorable(): void

@@ -48,3 +48,31 @@ export async function open(key, str) {
 }
 
 export const KEY_CHECK_VALUE = { k: '1two1-key-check-v1' };
+
+/* ---------------------------------------------------------------- random connect
+   Two strangers have no shared secret phrase, so their browsers agree on one: each makes a throw-away
+   ECDH key pair, the server only relays the PUBLIC halves, and both sides compute the same secret.
+   The private halves never leave the browsers, so the server cannot derive the chat key. */
+const ECDH = { name: 'ECDH', namedCurve: 'P-256' };
+
+export async function genPair() {
+  const pair = await crypto.subtle.generateKey(ECDH, false, ['deriveBits']);
+  const pub = new Uint8Array(await crypto.subtle.exportKey('raw', pair.publicKey));
+  return { priv: pair.privateKey, pub: toB64u(pub) };
+}
+
+/** The agreed secret, used in place of a typed secret phrase. */
+export async function sharedSecret(priv, peerPub) {
+  const peer = await crypto.subtle.importKey('raw', fromB64u(peerPub), ECDH, false, []);
+  const bits = new Uint8Array(await crypto.subtle.deriveBits({ name: 'ECDH', public: peer }, priv, 256));
+  return toB64u(bits);
+}
+
+/** A short code both people see. If it matches on both screens, nobody sits in between. */
+export async function safetyCode(pubA, pubB) {
+  const [a, b] = [pubA, pubB].sort();
+  const hash = new Uint8Array(await crypto.subtle.digest('SHA-256', enc.encode(a + '|' + b)));
+  const n = new DataView(hash.buffer).getUint32(0) % 100000000;
+  const s = String(n).padStart(8, '0');
+  return s.slice(0, 4) + ' ' + s.slice(4);
+}

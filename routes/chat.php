@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Chat\ChatController;
 use App\Http\Controllers\Chat\InfoController;
+use App\Http\Controllers\Chat\MatchController;
 use App\Http\Controllers\Chat\RoomController;
 use Illuminate\Support\Facades\Route;
 
@@ -18,6 +19,11 @@ Route::get('/faq', [InfoController::class, 'show'])->defaults('page', 'faq');
 Route::prefix('api')->group(function () {
     Route::post('enter', [ChatController::class, 'enter']);
     Route::post('rooms', [RoomController::class, 'create']);
+    Route::middleware('throttle:match')->prefix('match')->group(function () {
+        Route::post('join', [MatchController::class, 'join']);
+        Route::post('poll', [MatchController::class, 'poll']);
+        Route::post('cancel', [MatchController::class, 'cancel']);
+    });
 
     Route::middleware(['member', 'throttle:member'])->group(function () {
         Route::get('poll', [ChatController::class, 'poll']);
@@ -32,5 +38,6 @@ Route::prefix('api')->group(function () {
         Route::post('profile', [ChatController::class, 'nick']);
         Route::post('room/disappear', [ChatController::class, 'disappear']);
         Route::post('room/clear', [ChatController::class, 'clear']);
+        Route::post('room/end', [ChatController::class, 'end']);
     });
 });

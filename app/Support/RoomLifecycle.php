@@ -43,6 +43,15 @@ class RoomLifecycle
             }
         }
 
+        // Rooms a member ended, once the partner has had time to notice.
+        foreach (Room::where('status', 'closed')->where('updated_at', '<', now()->subMinutes(2))->get(['id']) as $room) {
+            $room->delete();
+        }
+
+        // Random-connect queue: closed tabs and already-delivered matches are erased.
+        \App\Models\MatchTicket::where('status', 'waiting')->where('last_poll_at', '<', now()->subSeconds(40))->delete();
+        \App\Models\MatchTicket::where('status', 'matched')->where('updated_at', '<', now()->subMinutes(3))->delete();
+
         return $count;
     }
 

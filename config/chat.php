@@ -25,6 +25,18 @@ return [
     'create_per_day' => (int) env('CHAT_CREATE_PER_DAY', 20),      // per IP address
     'max_rooms' => (int) env('CHAT_MAX_ROOMS', 20000),             // whole service
 
+    // Random connect: pairs two strangers who are looking at the same moment into a fresh Temp room.
+    'random_topics' => [
+        'chat' => 'Just chatting',
+        'advice' => 'Advice',
+        'games' => 'Games',
+        'music' => 'Music',
+        'movies' => 'Movies & shows',
+        'tech' => 'Tech',
+        'books' => 'Books',
+    ],
+    'random_joins_per_hour' => (int) env('CHAT_RANDOM_PER_HOUR', 30),   // per IP address
+
     'max_body_chars' => 24000,
     'disappear_options' => [0, 30, 300, 3600, 86400],
 ];

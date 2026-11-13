@@ -444,3 +444,33 @@ button.quote { text-align: left; width: 100%; color: inherit; cursor: pointer; b
 button.quote:hover { background: rgba(0, 0, 0, 0.32); }
 .msg.flash .bubble { animation: flashmsg 1.2s ease; }
 @keyframes flashmsg { 0%, 60% { box-shadow: 0 0 0 3px rgba(255, 220, 120, 0.85); } 100% { box-shadow: none; } }
+
+/* ------------------------------------------------------ random connect */
+.tabs { grid-template-columns: repeat(3, 1fr); }
+.tab { font-size: 13.5px; }
+.rand-intro { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 18px; padding: 14px; border-radius: 18px; background: linear-gradient(135deg, rgba(124, 108, 255, 0.14), rgba(56, 169, 255, 0.06)); border: 1px solid rgba(124, 108, 255, 0.3); }
+.rand-intro b { display: block; font-size: 16px; margin-bottom: 2px; }
+.rand-intro p { margin: 0; font-size: 12.5px; line-height: 1.5; color: var(--mut); }
+.rand-orb { position: relative; flex: none; width: 42px; height: 42px; margin-top: 2px; }
+.rand-orb i { position: absolute; inset: 0; border-radius: 50%; border: 2px solid; }
+.rand-orb i:nth-child(1) { border-color: var(--a1); transform: translateX(-7px); }
+.rand-orb i:nth-child(2) { border-color: var(--a2); transform: translateX(7px); mix-blend-mode: screen; }
+.rand-orb i:nth-child(3) { inset: 14px; border: 0; background: #fff; border-radius: 50%; box-shadow: 0 0 18px #fff; animation: pulse 1.6s infinite; }
+.topics { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.topic { padding: 8px 14px; border-radius: 999px; font-size: 13px; font-weight: 600; color: var(--mut); background: rgba(0, 0, 0, 0.3); border: 1px solid var(--line2); transition: all 0.2s; }
+.topic:hover { color: var(--text); background: rgba(255, 255, 255, 0.06); }
+.topic.on { color: #fff; border-color: rgba(124, 108, 255, 0.8); background: linear-gradient(135deg, rgba(124, 108, 255, 0.35), rgba(56, 169, 255, 0.2)); box-shadow: 0 0 0 3px rgba(124, 108, 255, 0.14); }
+label.agree { display: flex; gap: 12px; align-items: flex-start; margin: 4px 0 6px; padding: 12px 14px; border-radius: 14px; background: rgba(255, 180, 84, 0.06); border: 1px solid rgba(255, 180, 84, 0.22); text-transform: none; letter-spacing: normal; font-size: 13px; font-weight: 400; line-height: 1.45; color: var(--mut); cursor: pointer; }
+label.agree b { color: var(--text); }
+label.agree input { flex: none; width: 20px; height: 20px; margin-top: 1px; accent-color: #7c6cff; }
+
+#rand-wait { text-align: center; padding: 6px 0 2px; }
+#rand-wait h3 { font-size: 19px; margin: 6px 0 4px; }
+#rand-wait .hint { margin: 6px 0; }
+#rand-wait .btn { margin-top: 18px; }
+.radar { position: relative; width: 132px; height: 132px; margin: 6px auto 12px; }
+.radar i { position: absolute; inset: 0; border-radius: 50%; border: 2px solid rgba(124, 108, 255, 0.6); opacity: 0; animation: ping 2.8s ease-out infinite; }
+.radar i:nth-child(2) { animation-delay: 0.9s; border-color: rgba(56, 169, 255, 0.55); }
+.radar i:nth-child(3) { animation-delay: 1.8s; }
+.radar span { position: absolute; inset: 44px; border-radius: 50%; background: var(--grad); box-shadow: 0 0 36px rgba(95, 110, 255, 0.9); animation: pulse 1.6s ease-in-out infinite; }
+@keyframes ping { 0% { transform: scale(0.35); opacity: 0.9; } 100% { transform: scale(1.15); opacity: 0; } }

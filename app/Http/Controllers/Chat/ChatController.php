@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Member;
 use App\Models\Message;
 use App\Models\Room;
+use App\Models\RoomEvent;
 use App\Support\Ids;
 use App\Support\RoomLifecycle;
 use Illuminate\Http\JsonResponse;
@@ -301,6 +302,23 @@ class ChatController extends Controller
         $me = $request->attributes->get('member');
         $data = $request->validate(['nick_enc' => ['nullable', 'string', 'max:600']]);
         Member::whereKey($me->id)->update(['nick_enc' => $data['nick_enc'] ?? null]);
+
+        return response()->json(['ok' => true]);
+    }
+
+    /** Either member can end a room for both. "report" also counts it, anonymously, for the operator. */
+    public function end(Request $request): JsonResponse
+    {
+        $room = $request->attributes->get('room');
+        $data = $request->validate(['report' => ['sometimes', 'boolean']]);
+
+        if ($room->status === 'active') {
+            RoomEvent::record(($data['report'] ?? false) ? 'reported' : 'ended', $room->mode, $room->source);
+            // A closed room is refused at once, so the partner's next poll learns it ended.
+            // Messages go now; the sweep erases the rest a couple of minutes later.
+            $room->update(['status' => 'closed']);
+            Message::where('room_id', $room->id)->delete();
+        }
 
         return response()->json(['ok' => true]);
     }
