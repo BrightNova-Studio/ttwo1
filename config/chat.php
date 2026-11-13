@@ -39,4 +39,7 @@ return [
 
     'max_body_chars' => 24000,
     'disappear_options' => [0, 30, 300, 3600, 86400],
+
+    // Vanish mode: a message is erased this many seconds after the other person has seen it.
+    'vanish_seconds' => 30,
 ];

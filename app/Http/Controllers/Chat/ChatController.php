@@ -205,6 +205,7 @@ class ChatController extends Controller
             'view_once' => (bool) ($data['view_once'] ?? false),
             'reply_to' => $replyTo,
             'rev' => $rev,
+            'vanish' => (bool) $roomRow->vanish,
             'expires_at' => $roomRow->disappear_seconds > 0 ? now()->addSeconds($roomRow->disappear_seconds) : null,
         ]));
 
@@ -286,9 +287,16 @@ class ChatController extends Controller
 
         if ($pending) {
             $room->mutate(function ($rev) use ($room, $them, $data) {
-                Message::where('room_id', $room->id)->where('sender_slot', $them)
-                    ->where('id', '<=', $data['up_to'])->whereNull('seen_at')
-                    ->update(['seen_at' => now(), 'delivered_at' => DB::raw('COALESCE(delivered_at, CURRENT_TIMESTAMP)'), 'rev' => $rev]);
+                $base = Message::where('room_id', $room->id)->where('sender_slot', $them)
+                    ->where('id', '<=', $data['up_to'])->whereNull('seen_at');
+
+                // Vanish mode: the countdown starts the moment the other person sees it.
+                $vanishAt = now()->addSeconds((int) config('chat.vanish_seconds'));
+                (clone $base)->where('vanish', true)
+                    ->where(fn ($q) => $q->whereNull('expires_at')->orWhere('expires_at', '>', $vanishAt))
+                    ->update(['expires_at' => $vanishAt]);
+
+                $base->update(['seen_at' => now(), 'delivered_at' => DB::raw('COALESCE(delivered_at, CURRENT_TIMESTAMP)'), 'rev' => $rev]);
             });
         }
 
@@ -341,6 +349,17 @@ class ChatController extends Controller
         return response()->json(['ok' => true, 'seconds' => $data['seconds']]);
     }
 
+    /** Vanish mode: either member can switch it on or off for the room. Default is off. */
+    public function vanish(Request $request): JsonResponse
+    {
+        $room = $request->attributes->get('room');
+        $data = $request->validate(['on' => ['required', 'boolean']]);
+
+        $room->mutate(fn () => Room::whereKey($room->id)->update(['vanish' => (bool) $data['on']]));
+
+        return response()->json(['ok' => true, 'vanish' => (bool) $data['on']]);
+    }
+
     /** Either member can wipe the whole conversation for both of them. */
     public function clear(Request $request): JsonResponse
     {
@@ -362,6 +381,8 @@ class ChatController extends Controller
     {
         return [
             'disappear' => (int) $room->disappear_seconds,
+            'vanish' => (bool) $room->vanish,
+            'vanish_seconds' => (int) config('chat.vanish_seconds'),
             'epoch' => (int) $room->epoch,
             'mode' => $room->mode,
             'ttl' => RoomLifecycle::seconds($room->mode),
@@ -398,6 +419,7 @@ class ChatController extends Controller
             'my_reaction' => $m->{'react_'.$mySlot},
             'their_reaction' => $m->{'react_'.$them},
             'expires_at' => $m->expires_at?->timestamp,
+            'vanish' => (bool) $m->vanish,
             'delivered' => (bool) $m->delivered_at,
             'seen' => (bool) $m->seen_at,
             'created_at' => $m->created_at->timestamp,

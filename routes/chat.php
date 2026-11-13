@@ -37,6 +37,7 @@ Route::prefix('api')->group(function () {
         Route::post('typing', [ChatController::class, 'typing']);
         Route::post('profile', [ChatController::class, 'nick']);
         Route::post('room/disappear', [ChatController::class, 'disappear']);
+        Route::post('room/vanish', [ChatController::class, 'vanish']);
         Route::post('room/clear', [ChatController::class, 'clear']);
         Route::post('room/end', [ChatController::class, 'end']);
     });

@@ -181,6 +181,37 @@ class PrivateChatTest extends TestCase
         $this->assertNull(Message::find($id));
     }
 
+    public function test_vanish_mode_is_off_by_default_and_erases_messages_30s_after_seen(): void
+    {
+        [$room, $chat, $m1, $m2] = $this->makeRoom();
+        $t1 = $this->enter($chat, $m1)->json('token');
+        $t2 = $this->enter($chat, $m2)->json('token');
+
+        $this->getJson('/api/poll', $this->as($t1))->assertJsonPath('room.vanish', false);
+
+        // Off: a seen message has no timer.
+        $plain = $this->postJson('/api/messages', ['body_enc' => 'a'], $this->as($t1))->json('message.id');
+        $this->postJson('/api/messages/seen', ['up_to' => $plain], $this->as($t2))->assertOk();
+        $this->assertNull(Message::find($plain)->expires_at);
+
+        $this->postJson('/api/room/vanish', ['on' => true], $this->as($t2))->assertOk();
+        $this->getJson('/api/poll', $this->as($t1))->assertJsonPath('room.vanish', true);
+
+        $id = $this->postJson('/api/messages', ['body_enc' => 'b'], $this->as($t1))->json('message.id');
+        $this->assertNull(Message::find($id)->expires_at, 'no timer until the other person has seen it');
+
+        $this->postJson('/api/messages/seen', ['up_to' => $id], $this->as($t2))->assertOk();
+        $exp = Message::find($id)->expires_at;
+        $this->assertEqualsWithDelta(30, now()->diffInSeconds($exp, false), 2);
+        $this->assertNotNull(Message::find($id)->seen_at);
+
+        $this->travel(31)->seconds();
+        $room->members()->update(['last_seen_at' => now()]);
+        $this->getJson('/api/poll?since=0', $this->as($t1))->assertOk();
+        $this->assertNull(Message::find($id), 'gone after 30 s');
+        $this->assertNotNull(Message::find($plain), 'messages from before vanish mode stay');
+    }
+
     public function test_disabled_room_locks_everyone_out(): void
     {
         [$room, $chat, $m1] = $this->makeRoom();

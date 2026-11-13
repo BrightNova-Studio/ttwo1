@@ -16,6 +16,9 @@ export function startChat({ session, key, onExit, random = null }) {
     rev: 0,
     epoch: session.room.epoch,
     disappear: session.room.disappear,
+    vanish: !!session.room.vanish,
+    vanishSecs: session.room.vanish_seconds || 30,
+    skew: 0, // server clock minus this device's clock, in seconds
     msgs: new Map(), // id -> message
     els: new Map(), // id -> element
     pending: new Map(), // client id -> optimistic message
@@ -53,11 +56,17 @@ export function startChat({ session, key, onExit, random = null }) {
   const peerStatus = h('div', { class: 'peer-status' }, 'Waiting for them to join…');
   const offline = h('div', { class: 'offline-pill', hidden: true }, 'Reconnecting…');
 
+  // Vanish mode: off by default. When on, every message erases itself a short time after the other person has seen it.
+  const btnVanish = h('button', { class: 'vanish-btn', type: 'button', role: 'switch', 'aria-checked': 'false', onclick: () => setVanish(!S.vanish) },
+    h('span', { class: 'v-ico', html: icon('ghost') }), h('span', { class: 'v-txt' }, 'Vanish'), h('i', { class: 'v-dot' }));
+  const vanishBar = h('div', { class: 'vanishbar', hidden: true }, h('span', { html: icon('ghost') }), h('span', { class: 'vb-txt' }));
+
   const header = h('header', { class: 'top' },
     h('div', { class: 'peer' }, peerAvatar, h('div', { class: 'peer-text' }, peerName, peerStatus)),
     h('div', { class: 'top-actions' },
       h('div', { class: 'enc-badge', title: 'Messages are encrypted on this device before they are sent. The server only sees scrambled data.' },
         h('span', { html: icon('lock') }), h('span', { class: 'enc-text' }, 'End-to-end encrypted')),
+      btnVanish,
       h('button', { class: 'icon-btn', type: 'button', title: 'Hide now (press Esc twice)', 'aria-label': 'Hide now', onclick: () => exit('hidden'), html: icon('eyeoff') }),
       h('button', { class: 'icon-btn', type: 'button', title: 'Room settings', 'aria-label': 'Room settings', onclick: () => toggleDrawer(true), html: icon('sliders') })));
 
@@ -90,7 +99,39 @@ export function startChat({ session, key, onExit, random = null }) {
   const drawer = h('aside', { class: 'drawer', hidden: true, 'aria-label': 'Room settings' });
   const scrim = h('div', { class: 'scrim', hidden: true, onclick: () => toggleDrawer(false) });
 
-  app.append(header, offline, h('div', { class: 'stage' }, list, jump), composer, scrim, drawer);
+  app.append(header, vanishBar, offline, h('div', { class: 'stage' }, list, jump), composer, scrim, drawer);
+
+  function paintVanish() {
+    btnVanish.hidden = !S.peerJoined && !S.vanish; // offered once both members are in the room
+    btnVanish.setAttribute('aria-checked', String(S.vanish));
+    btnVanish.classList.toggle('on', S.vanish);
+    btnVanish.title = S.vanish
+      ? `Vanish mode is ON. Messages disappear ${S.vanishSecs} s after they are seen. Tap to turn off.`
+      : `Vanish mode is off. Tap to make new messages disappear ${S.vanishSecs} s after they are seen.`;
+    $('.v-txt', btnVanish).textContent = S.vanish ? 'Vanish on' : 'Vanish';
+    $('.vb-txt', vanishBar).textContent = `Vanish mode · new messages disappear ${S.vanishSecs} seconds after they are seen`;
+    vanishBar.hidden = !S.vanish;
+    composer.classList.toggle('vanish', S.vanish);
+    ta.placeholder = S.vanish ? 'Vanishing message…' : 'Write a private message';
+  }
+  async function setVanish(on) {
+    const before = S.vanish;
+    S.vanish = on;
+    S.vanishBusy = true;
+    paintVanish();
+    try {
+      await api('POST', '/room/vanish', { on });
+      S.vanishSetAt = Date.now();
+      S.vanishBusy = false;
+      note(on ? `Vanish mode is on. New messages disappear ${S.vanishSecs} seconds after they are seen.` : 'Vanish mode is off.', 'ghost');
+    } catch (e) {
+      S.vanishBusy = false;
+      S.vanish = before;
+      paintVanish();
+      if (!authFail(e)) toast('Could not change Vanish mode.', 'warn');
+    }
+  }
+  paintVanish();
 
   /* -------------------------------------------------------------- helpers */
   const nearBottom = () => list.scrollHeight - list.scrollTop - list.clientHeight < 150;
@@ -136,6 +177,8 @@ export function startChat({ session, key, onExit, random = null }) {
   /* ------------------------------------------------------------ rendering */
   const preview = (m) => (m.unsent ? 'Unsent message' : m.view_once ? 'View-once message' : (m.text || 'Message').slice(0, 90));
 
+  const secsLeft = (exp) => Math.max(0, Math.ceil(exp - (Date.now() / 1000 + S.skew)));
+
   function tickEl(m) {
     if (!m.mine) return null;
     if (m.state === 'sending') return h('span', { class: 'tick wait', title: 'Sending…', html: icon('clock') });
@@ -178,7 +221,10 @@ export function startChat({ session, key, onExit, random = null }) {
     }
 
     const meta = h('span', { class: 'meta' },
-      m.expires_at ? h('span', { class: 'ttl', title: 'Disappears automatically', html: icon('clock') }) : null,
+      m.vanish
+        ? h('span', { class: 'vcount' + (m.expires_at ? ' live' : ''), title: m.expires_at ? 'Vanishing' : `Vanishes ${S.vanishSecs} s after it is seen`, data: m.expires_at ? { exp: String(m.expires_at) } : {} },
+          h('span', { html: icon('ghost') }), m.expires_at ? h('b', {}, secsLeft(m.expires_at) + 's') : null)
+        : m.expires_at ? h('span', { class: 'ttl', title: 'Disappears automatically', html: icon('clock') }) : null,
       fmtTime(m.created_at), tickEl(m));
 
     const el = h('div', { class: 'msg ' + (m.mine ? 'mine' : 'theirs') + (m.state === 'sending' ? ' sending' : ''), data: { id: String(m.id), ts: String(m.created_at) } });
@@ -311,6 +357,7 @@ export function startChat({ session, key, onExit, random = null }) {
       myReact: mineR?.e || null,
       theirReact: theirR?.e || null,
       expires_at: row.expires_at,
+      vanish: !!row.vanish,
       delivered: row.delivered,
       seen: row.seen,
       created_at: row.created_at,
@@ -380,13 +427,23 @@ export function startChat({ session, key, onExit, random = null }) {
     if (p.joined && !S.peerJoined) {
       S.peerJoined = true;
       if (S.primed) note(`${theirName()} joined the room.`, 'lock');
+      paintVanish();
     }
     paintPeer(p);
   }
 
   async function pollOnce() {
+    const startedAt = Date.now();
     const r = await api('GET', '/poll?since=' + S.rev);
     S.rev = r.rev;
+    if (r.now) S.skew = r.now - Date.now() / 1000;
+    if (r.room.vanish_seconds) S.vanishSecs = r.room.vanish_seconds;
+    // A poll that began before my own switch of Vanish mode finished carries the old value: ignore it.
+    if (!S.vanishBusy && startedAt >= (S.vanishSetAt || 0) && !!r.room.vanish !== S.vanish) {
+      S.vanish = !!r.room.vanish;
+      paintVanish();
+      if (S.primed) note(S.vanish ? `${theirName()} turned Vanish mode on. New messages disappear ${S.vanishSecs} seconds after they are seen.` : `${theirName()} turned Vanish mode off.`, 'ghost');
+    }
 
     if (r.room.epoch !== S.epoch) {
       const mine = S.expectEpoch === r.room.epoch;
@@ -491,7 +548,7 @@ export function startChat({ session, key, onExit, random = null }) {
     const tmp = {
       id: 't' + cid, mine: true, text: S.viewOnce ? null : text, view_once: S.viewOnce, viewed: false, unsent: false,
       reply_to: typeof S.replyTo?.id === 'number' ? S.replyTo.id : null, myReact: null, theirReact: null,
-      expires_at: null, delivered: false, seen: false, created_at: Math.floor(Date.now() / 1000), state: 'sending',
+      expires_at: null, vanish: S.vanish, delivered: false, seen: false, created_at: Math.floor(Date.now() / 1000), state: 'sending',
     };
     S.pending.set(cid, tmp);
     S.msgs.set(tmp.id, tmp);
@@ -519,6 +576,7 @@ export function startChat({ session, key, onExit, random = null }) {
         tmp.id = r.message.id;
         tmp.created_at = r.message.created_at;
         tmp.expires_at = r.message.expires_at;
+        tmp.vanish = !!r.message.vanish;
         tmp.state = 'sent';
         S.pending.delete(cid);
         S.msgs.set(tmp.id, tmp);
@@ -836,8 +894,15 @@ export function startChat({ session, key, onExit, random = null }) {
   }
 
   const tickTimer = setInterval(() => {
-    const now = Date.now() / 1000;
+    const now = Date.now() / 1000 + S.skew;
     for (const m of [...S.msgs.values()]) if (m.expires_at && m.expires_at < now) removeMsg(m.id);
+    // Vanish countdowns: tick the numbers and fade a message out during its last seconds.
+    list.querySelectorAll('.vcount[data-exp]').forEach((v) => {
+      const left = secsLeft(Number(v.dataset.exp));
+      const b = v.querySelector('b');
+      if (b) b.textContent = left + 's';
+      v.closest('.msg')?.classList.toggle('fading', left <= 5);
+    });
     const idle = S.settings.idleMinutes;
     if (idle > 0 && Date.now() - S.lastActivity > idle * 60000) exit('idle');
   }, 1000);
