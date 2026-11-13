@@ -212,6 +212,26 @@ class PrivateChatTest extends TestCase
         $this->assertNotNull(Message::find($plain), 'messages from before vanish mode stay');
     }
 
+    public function test_secret_phrase_is_optional_and_the_partner_is_told(): void
+    {
+        [$room, $chat, $m1, $m2] = $this->makeRoom();
+        $first = $this->enter($chat, $m1);
+        $t1 = $first->json('token');
+        $this->assertNull($first->json('phrase'), 'undecided until the first member chooses');
+
+        $this->postJson('/api/key-check', ['key_check' => 'NOPHRASE', 'phrase' => false], $this->as($t1))->assertOk()->assertJson(['phrase' => false]);
+        $this->postJson('/api/key-check', ['key_check' => 'X', 'phrase' => true], $this->as($t1))->assertStatus(409)->assertJson(['phrase' => false]);
+        $this->assertFalse($this->enter($chat, $m2)->json('phrase'), 'the partner may enter without a phrase');
+    }
+
+    public function test_a_room_with_a_phrase_tells_the_partner_to_enter_it(): void
+    {
+        [, $chat, $m1, $m2] = $this->makeRoom();
+        $t1 = $this->enter($chat, $m1)->json('token');
+        $this->postJson('/api/key-check', ['key_check' => 'LOCKED', 'phrase' => true], $this->as($t1))->assertOk();
+        $this->assertTrue($this->enter($chat, $m2)->json('phrase'));
+    }
+
     public function test_disabled_room_locks_everyone_out(): void
     {
         [$room, $chat, $m1] = $this->makeRoom();

@@ -64,8 +64,11 @@ export function startChat({ session, key, onExit, random = null }) {
   const header = h('header', { class: 'top' },
     h('div', { class: 'peer' }, peerAvatar, h('div', { class: 'peer-text' }, peerName, peerStatus)),
     h('div', { class: 'top-actions' },
-      h('div', { class: 'enc-badge', title: 'Messages are encrypted on this device before they are sent. The server only sees scrambled data.' },
-        h('span', { html: icon('lock') }), h('span', { class: 'enc-text' }, 'End-to-end encrypted')),
+      session.phrase === false
+        ? h('div', { class: 'enc-badge soft', title: 'This room has no secret phrase. Messages are still encrypted and unreadable to anyone watching the network, but without a phrase the room host could technically work out the key. Use a new room with a phrase for full privacy.' },
+          h('span', { html: icon('lock') }), h('span', { class: 'enc-text' }, 'Encrypted · no phrase'))
+        : h('div', { class: 'enc-badge', title: 'Messages are encrypted on this device before they are sent. The server only sees scrambled data.' },
+          h('span', { html: icon('lock') }), h('span', { class: 'enc-text' }, 'End-to-end encrypted')),
       btnVanish,
       h('button', { class: 'icon-btn', type: 'button', title: 'Hide now (press Esc twice)', 'aria-label': 'Hide now', onclick: () => exit('hidden'), html: icon('eyeoff') }),
       h('button', { class: 'icon-btn', type: 'button', title: 'Room settings', 'aria-label': 'Room settings', onclick: () => toggleDrawer(true), html: icon('sliders') })));

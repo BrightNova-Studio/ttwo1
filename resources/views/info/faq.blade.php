@@ -13,6 +13,7 @@
         [null, 'And "Long term"?', '<p>Same idea with a 30-day clock. Each visit resets it. After 30 days with nobody around, it is deleted.</p>'],
         [null, 'My Temp room expired. Can you restore it?', '<p>No. It is deleted completely, by design. Create a new room.</p>'],
         [null, 'I lost the Secret Room Key or a Pass Code.', '<p>We only keep one-way hashes, so we cannot show or resend them. Create a new room.</p>'],
+        [null, 'Is the secret phrase required?', '<p>No. The first person in can leave it empty, and then the other person simply enters without one. Messages are still encrypted. The difference: with a phrase, the key exists only on your two devices, so even we could not read the chat. Without one, the key is derived from the room key, which our server sees when you sign in, so you are trusting us not to look. Use a phrase for anything sensitive. A room without one is marked "Encrypted · no phrase" in the header.</p>'],
         [null, 'I forgot the secret phrase.', '<p>It cannot be recovered by anyone. That is what keeps the chat private. Start a new room.</p>'],
         [null, 'Can the website owner read my messages?', '<p>No. Messages are encrypted in your browser before they are sent, and the key never leaves your device. See the <a href="/privacy">privacy statement</a>.</p>'],
         [null, 'Can I be signed in on two devices?', '<p>Each Pass Code allows one live session. Signing in somewhere else ends the first one, and you will see a notice. If that was not you, tell your partner.</p>'],

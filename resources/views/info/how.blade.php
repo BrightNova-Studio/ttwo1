@@ -19,8 +19,8 @@
         <p>Give your partner the Secret Room Key and <em>their</em> Pass Code. Tell them in person, or send it over a channel you trust. Keep your own Pass Code to yourself.</p>
     </li>
     <li>
-        <b>Agree on a secret phrase</b>
-        <p>The first person in chooses a <b>secret phrase</b> (10 or more characters) and tells the other person separately, ideally face to face. It scrambles every message on your device before it is sent. We never see it and can never recover it.</p>
+        <b>Optionally, agree on a secret phrase</b>
+        <p>The first person in can choose a <b>secret phrase</b> (10 or more characters) and tell the other person separately, ideally face to face. The other person must then type the same phrase to get in. It scrambles every message on your device, and we never see it and can never recover it. If nobody sets one, you just walk in: messages are still encrypted, but for full privacy, where not even we could work out the key, use a phrase.</p>
     </li>
     <li>
         <b>Chat</b>

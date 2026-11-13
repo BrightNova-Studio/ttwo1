@@ -93,7 +93,7 @@ class OperatorController extends Controller
                 'blocked' => $rooms->where('status', 'disabled')->count(),
                 'live' => $liveNow->count(),
                 'paired' => $rooms->filter(fn ($r) => $r->members->whereNotNull('joined_at')->count() === 2)->count(),
-                'locked' => $rooms->filter(fn ($r) => $r->key_check !== null)->count(),
+                'locked' => $rooms->filter(fn ($r) => $r->key_check !== null && $r->phrase_set !== false)->count(),
                 'random' => $rooms->where('source', 'random')->count(),
                 'searching' => \App\Models\MatchTicket::where('status', 'waiting')->where('last_poll_at', '>', now()->subSeconds(15))->count(),
             ],
@@ -231,7 +231,7 @@ class OperatorController extends Controller
 
         $room->mutate(function () use ($room, $chatId, $m1, $m2) {
             $room->messages()->delete();
-            $room->update(['chat_hash' => Ids::hash($chatId), 'key_check' => null, 'status' => 'active', 'last_active_at' => now()]);
+            $room->update(['chat_hash' => Ids::hash($chatId), 'key_check' => null, 'phrase_set' => null, 'status' => 'active', 'last_active_at' => now()]);
             Room::whereKey($room->id)->increment('epoch');
             foreach ([1 => $m1, 2 => $m2] as $slot => $id) {
                 Member::where('room_id', $room->id)->where('slot', $slot)->update([

@@ -106,6 +106,7 @@ class ChatController extends Controller
             'token' => $token,
             'slot' => $member->slot,
             'key_check' => $room->key_check,
+            'phrase' => $room->key_check ? (bool) ($room->phrase_set ?? true) : null,
             'nick_enc' => $member->nick_enc,
             'room' => $this->roomState($room->refresh()),
             'peer' => $this->peerState($room, $member->slot),
@@ -116,13 +117,21 @@ class ChatController extends Controller
     /** First member in sets the shared-secret check value; after that it is fixed. */
     public function keyCheck(Request $request): JsonResponse
     {
-        $data = $request->validate(['key_check' => ['required', 'string', 'max:400']]);
+        // "phrase" says whether the first member chose a secret phrase. Omitted = yes (random connect uses a strong agreed key).
+        $data = $request->validate(['key_check' => ['required', 'string', 'max:400'], 'phrase' => ['sometimes', 'boolean']]);
         $room = $request->attributes->get('room');
+        $phrase = (bool) ($data['phrase'] ?? true);
 
-        $set = Room::whereKey($room->id)->whereNull('key_check')->update(['key_check' => $data['key_check']]);
+        $set = Room::whereKey($room->id)->whereNull('key_check')->update(['key_check' => $data['key_check'], 'phrase_set' => $phrase]);
 
         // Somebody else set it a moment earlier: hand back the existing value so this client can verify against it.
-        return response()->json(['ok' => (bool) $set, 'key_check' => $set ? $data['key_check'] : Room::whereKey($room->id)->value('key_check')], $set ? 200 : 409);
+        $row = $set ? null : Room::whereKey($room->id)->first(['key_check', 'phrase_set']);
+
+        return response()->json([
+            'ok' => (bool) $set,
+            'key_check' => $set ? $data['key_check'] : $row->key_check,
+            'phrase' => $set ? $phrase : (bool) ($row->phrase_set ?? true),
+        ], $set ? 200 : 409);
     }
 
     public function leave(Request $request): JsonResponse

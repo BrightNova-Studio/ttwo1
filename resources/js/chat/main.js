@@ -101,12 +101,50 @@ async function signIn() {
   const r = await api('POST', '/enter', { chat_id: S.chatId, member_id: S.memberId });
   setToken(r.token);
   S.session = r;
-  $('#secret-hint').textContent = r.key_check
-    ? 'Enter the secret phrase you and your partner agreed on. It is checked on this device only.'
-    : 'You are the first one in. Choose a secret phrase of at least ' + SECRET_MIN + ' characters and share it with your partner in private. It never leaves your device and cannot be recovered.';
-  $('#step-3 .btn.primary span').textContent = r.key_check ? 'Unlock room' : 'Create secret & unlock';
+  paintPhraseStep();
   go(3);
 }
+
+/**
+ * The secret phrase is optional. The first person in chooses: type one (then the partner must enter the same),
+ * or leave it empty (then the partner just walks in). Three cases are shown here.
+ */
+function phraseMode() {
+  const r = S.session;
+  if (!r.key_check) return 'choose'; // first one in
+  return r.phrase === false ? 'none' : 'enter'; // partner: nothing to type, or must type the phrase
+}
+
+function paintPhraseStep() {
+  const mode = phraseMode();
+  const input = $('#secret');
+  const hint = $('#secret-hint');
+  const label = $('#secret-label');
+  $('#secret-field').hidden = mode === 'none';
+  input.value = '';
+  label.hidden = mode === 'none';
+  if (mode === 'choose') {
+    label.innerHTML = 'Secret phrase <span class="opt">optional</span>';
+    input.placeholder = 'Leave empty to skip';
+    hint.textContent = 'Add a phrase (at least ' + SECRET_MIN + ' characters) and your partner must type the same one to get in. It never leaves your device and cannot be recovered. Leave it empty if you would rather not use one.';
+  } else if (mode === 'enter') {
+    label.innerHTML = 'Secret phrase';
+    input.placeholder = 'The phrase you agreed on';
+    hint.textContent = 'Your partner set a secret phrase for this room. Enter it exactly. It is checked on this device only.';
+  } else {
+    hint.textContent = 'No secret phrase was set for this room, so you can go straight in. Messages are still encrypted.';
+  }
+  syncPhraseButton();
+}
+
+function syncPhraseButton() {
+  const mode = phraseMode();
+  const typed = $('#secret').value.length > 0;
+  const text = mode === 'choose' ? (typed ? 'Create phrase & enter' : 'Enter without a phrase') : mode === 'none' ? 'Enter room' : 'Unlock room';
+  $('#step-3 .btn.primary span').textContent = text;
+  $('#step-3 .btn.primary').dataset.label = text;
+}
+$('#secret').addEventListener('input', syncPhraseButton);
 
 steps[1].addEventListener('submit', (e) => {
   e.preventDefault();
@@ -132,10 +170,15 @@ steps[2].addEventListener('submit', async (e) => {
 steps[3].addEventListener('submit', async (e) => {
   e.preventDefault();
   unlockAudio();
-  const secret = $('#secret').value;
-  const first = !S.session.key_check;
-  if (first && secret.length < SECRET_MIN) return fail(steps[3], 'Use at least ' + SECRET_MIN + ' characters so it is hard to guess.');
-  if (!secret) return fail(steps[3], 'Enter the secret phrase.');
+  const mode = phraseMode();
+  const first = mode === 'choose';
+  const typed = $('#secret').value;
+  if (mode === 'enter' && !typed) return fail(steps[3], 'Enter the secret phrase your partner set.');
+  if (first && typed && typed.length < SECRET_MIN) return fail(steps[3], 'Use at least ' + SECRET_MIN + ' characters so it is hard to guess, or leave it empty to skip.');
+  // No phrase anywhere: a fixed value stands in. Messages are still encrypted, but the key is not secret.
+  const usePhrase = mode === 'none' ? false : !!typed;
+  const secret = usePhrase ? typed : C.NO_PHRASE;
+  const label = $('#step-3 .btn.primary').dataset.label || 'Enter room';
 
   busy(steps[3], true, 'Securing…');
   try {
@@ -147,11 +190,13 @@ steps[3].addEventListener('submit', async (e) => {
     if (first) {
       const mine = await C.seal(key, C.KEY_CHECK_VALUE);
       try {
-        await api('POST', '/key-check', { key_check: mine });
+        await api('POST', '/key-check', { key_check: mine, phrase: usePhrase });
         check = mine;
+        S.session.phrase = usePhrase;
       } catch (err) {
         if (err.status !== 409) throw err;
         check = err.data.key_check; // the partner got there first: verify against theirs
+        S.session.phrase = err.data.phrase !== false;
       }
     }
 
@@ -159,9 +204,15 @@ steps[3].addEventListener('submit', async (e) => {
       const v = await C.open(key, check);
       if (v.k !== C.KEY_CHECK_VALUE.k) throw new Error('bad');
     } catch {
-      return fail(steps[3], first
-        ? 'Your partner already chose a secret phrase, and this is not it. Ask them for it.'
-        : "That secret phrase doesn't match this room. Check it and try again.");
+      if (first) {
+        // The partner chose differently a moment earlier: show the right form instead of a dead end.
+        S.session.key_check = check;
+        paintPhraseStep();
+        return fail(steps[3], S.session.phrase
+          ? 'Your partner just set a secret phrase for this room. Enter it to continue.'
+          : 'Your partner chose no secret phrase for this room. Press Enter room to continue.');
+      }
+      return fail(steps[3], "That secret phrase doesn't match this room. Check it and try again.");
     }
 
     const session = S.session;
@@ -174,7 +225,7 @@ steps[3].addEventListener('submit', async (e) => {
   } catch (err) {
     fail(steps[3], err.status ? err.message : 'Something went wrong. Please try again.');
   } finally {
-    busy(steps[3], false, first ? 'Create secret & unlock' : 'Unlock room');
+    busy(steps[3], false, $('#step-3 .btn.primary').dataset.label || label);
   }
 });
 
@@ -321,8 +372,8 @@ $('#copy-invite').addEventListener('click', () => {
     'Secret Room Key: ' + made.key + '\n' +
     'Your Pass Code: ' + made.partner + '\n\n' +
     'Open ' + location.origin + ' in a Private / Incognito window and choose "Join a room".\n' +
-    'I will tell you the secret phrase separately.',
-    'Invite copied. Remember to share the secret phrase another way.');
+    'If I set a secret phrase for the room, I will tell you it separately.',
+    'Invite copied. If you set a secret phrase, share it another way.');
 });
 
 $('#enter-made').addEventListener('click', async () => {

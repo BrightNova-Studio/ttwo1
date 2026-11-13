@@ -47,6 +47,9 @@ export async function open(key, str) {
   return JSON.parse(dec.decode(pt));
 }
 
+/** Used in place of a phrase when the room has none. Messages are still encrypted, but this value is not secret. */
+export const NO_PHRASE = '1two1/no-phrase/v1';
+
 export const KEY_CHECK_VALUE = { k: '1two1-key-check-v1' };
 
 /* ---------------------------------------------------------------- random connect

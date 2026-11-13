@@ -69,8 +69,8 @@
             </form>
 
             <form id="step-3" class="step" autocomplete="off" novalidate>
-                <label for="secret">Shared secret phrase</label>
-                <div class="inp"><input id="secret" class="mask" name="s_{{ bin2hex(random_bytes(3)) }}" type="text" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Only the two of you know it" maxlength="120" required>
+                <label for="secret" id="secret-label">Secret phrase <span class="opt">optional</span></label>
+                <div class="inp" id="secret-field"><input id="secret" class="mask" name="s_{{ bin2hex(random_bytes(3)) }}" type="text" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Only the two of you know it" maxlength="120">
                     <button class="eye" type="button" data-reveal="secret" aria-label="Show or hide"></button></div>
                 <p id="secret-hint" class="hint">This phrase never leaves your device. It locks your messages so nobody else, not even us, can read them. Agree on it with your partner privately, and use at least 10 characters the first time.</p>
                 <p class="err" role="alert"></p>

@@ -171,6 +171,9 @@ label { display: block; font-size: 12px; font-weight: 600; letter-spacing: 0.08e
 .top-actions { display: flex; align-items: center; gap: 6px; }
 .enc-badge { display: flex; align-items: center; gap: 6px; padding: 6px 11px; border-radius: 999px; font-size: 12px; font-weight: 600; color: var(--ok); background: rgba(61, 220, 159, 0.08); border: 1px solid rgba(61, 220, 159, 0.22); margin-right: 4px; }
 .enc-badge svg { width: 14px; height: 14px; }
+.enc-badge.soft { color: #ffc46b; background: rgba(255, 196, 107, 0.08); border-color: rgba(255, 196, 107, 0.25); }
+.opt { margin-left: 6px; padding: 1px 7px; border-radius: 999px; font-size: 10.5px; font-weight: 600; letter-spacing: 0.04em; text-transform: none; color: var(--mut); background: rgba(255, 255, 255, 0.07); }
+#secret-field[hidden], #secret-label[hidden] { display: none; }
 .icon-btn { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; color: var(--mut); transition: background 0.2s, color 0.2s, transform 0.15s; }
 .icon-btn:hover { background: rgba(255, 255, 255, 0.07); color: var(--text); }
 .icon-btn:active { transform: scale(0.92); }
