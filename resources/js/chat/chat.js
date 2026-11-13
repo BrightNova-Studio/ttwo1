@@ -64,7 +64,12 @@ export function startChat({ session, key, onExit }) {
   const empty = h('div', { class: 'empty' },
     h('div', { class: 'empty-orb', html: icon('shield') }),
     h('h3', {}, 'Your private room is ready'),
-    h('p', {}, 'Messages are encrypted before they leave this device. Nobody else, including us, can read them.'));
+    h('p', {}, 'Messages are encrypted before they leave this device. Nobody else, including us, can read them.'),
+    session.room.ttl ? h('p', { class: 'room-life' },
+      session.room.mode === 'temp' ? 'Temp room: ' : 'Long-term room: ',
+      'it is deleted for good ',
+      session.room.ttl >= 86400 ? Math.round(session.room.ttl / 86400) + ' days' : Math.round(session.room.ttl / 60) + ' minutes',
+      ' after you are both away. Coming back resets the clock.') : null);
 
   const list = h('section', { class: 'list', 'aria-live': 'polite', 'aria-label': 'Messages' }, empty);
   const jump = h('button', { class: 'jump', type: 'button', hidden: true, onclick: () => scrollBottom(true) }, h('span', { html: icon('arrowdown') }), h('span', { class: 'jump-n' }));

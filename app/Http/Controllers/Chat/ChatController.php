@@ -337,6 +337,8 @@ class ChatController extends Controller
         return [
             'disappear' => (int) $room->disappear_seconds,
             'epoch' => (int) $room->epoch,
+            'mode' => $room->mode,
+            'ttl' => RoomLifecycle::seconds($room->mode),
         ];
     }
 
