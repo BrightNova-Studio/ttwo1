@@ -209,7 +209,7 @@
                 </li>
             @endforeach
         </ul>
-        <p class="explore">Learn more: <a href="/about-1two1">What is 1two1?</a> &middot; <a href="/secret-chat">Secret chat</a> &middot; <a href="/one-to-one-chat">One-to-one chat</a> &middot; <a href="/how-it-works">How it works</a></p>
+        <p class="explore">Learn more: <a href="/about-1two1">What is 1two1?</a> &middot; <a href="/secret-chat">Secret chat</a> &middot; <a href="/one-to-one-chat">One-to-one chat</a> &middot; <a href="/encrypted-chat">Encrypted chat</a> &middot; <a href="/disappearing-messages">Disappearing messages</a> &middot; <a href="/chat-without-signup">Chat without signup</a> &middot;<a href="/how-it-works">How it works</a></p>
     </section>
 
     <p class="support">Questions or something not working?

@@ -51,7 +51,7 @@
 
 <footer class="foot">
     <span>1two1 &middot; secret rooms for two</span>
-    <span><a href="/about-1two1">What is 1two1?</a> &middot; <a href="/private-chat-room">Private chat room</a> &middot; <a href="/secret-chat">Secret chat</a> &middot; <a href="/one-to-one-chat">121 chat</a> &middot; <a href="/temporary-chat-room">Temporary chat</a> &middot; <a href="/anonymous-chat">Anonymous chat</a> &middot; <a href="/how-it-works">How it works</a> &middot; <a href="/temp-vs-long">Temp vs Long</a> &middot; <a href="/privacy">Privacy</a> &middot; <a href="/faq">FAQ</a> &middot; <a href="mailto:{{ $supportEmail }}">Contact</a></span>
+    <span><a href="/about-1two1">What is 1two1?</a> &middot; <a href="/private-chat-room">Private chat room</a> &middot; <a href="/secret-chat">Secret chat</a> &middot; <a href="/one-to-one-chat">121 chat</a> &middot; <a href="/encrypted-chat">Encrypted chat</a> &middot; <a href="/disappearing-messages">Disappearing messages</a> &middot; <a href="/chat-without-signup">No signup chat</a> &middot;<a href="/temporary-chat-room">Temporary chat</a> &middot; <a href="/anonymous-chat">Anonymous chat</a> &middot; <a href="/how-it-works">How it works</a> &middot; <a href="/temp-vs-long">Temp vs Long</a> &middot; <a href="/privacy">Privacy</a> &middot; <a href="/faq">FAQ</a> &middot; <a href="mailto:{{ $supportEmail }}">Contact</a></span>
 </footer>
 </body>
 </html>

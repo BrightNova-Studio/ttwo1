@@ -667,7 +667,7 @@ class PrivateChatTest extends TestCase
         foreach ($xml->url as $u) {
             $all[] = (string) $u->loc;
         }
-        $this->assertCount(12, $all);
+        $this->assertCount(15, $all);
         foreach (['/', '/private-chat-room', '/temporary-chat-room', '/anonymous-chat', '/faq', '/privacy'] as $p) {
             $this->assertContains(rtrim(config('app.url'), '/').$p, $all);
         }
