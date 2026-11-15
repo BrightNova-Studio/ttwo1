@@ -1,5 +1,5 @@
 {{-- Site icon in every size. Google wants a square icon in multiples of 48 px (and a /favicon.ico at the root) to show beside search results. --}}
-<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="icon" href="/favicon.ico?v=2" sizes="48x48">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" sizes="any">
 <link rel="icon" type="image/png" href="/favicon-48.png" sizes="48x48">
 <link rel="icon" type="image/png" href="/favicon-96.png" sizes="96x96">
