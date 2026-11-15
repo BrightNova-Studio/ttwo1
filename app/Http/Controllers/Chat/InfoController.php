@@ -9,7 +9,10 @@ class InfoController extends Controller
 {
     /** Public, indexable pages: slug => [url path, view, sitemap priority]. */
     public const PAGES = [
+        'about' => ['/about-1two1', 'info.about', '0.9'],
         'private' => ['/private-chat-room', 'info.private', '0.9'],
+        'secret' => ['/secret-chat', 'info.secret', '0.8'],
+        'one-to-one' => ['/one-to-one-chat', 'info.one-to-one', '0.8'],
         'anonymous' => ['/anonymous-chat', 'info.anonymous', '0.9'],
         'temporary' => ['/temporary-chat-room', 'info.temporary', '0.9'],
         'how' => ['/how-it-works', 'info.how', '0.8'],

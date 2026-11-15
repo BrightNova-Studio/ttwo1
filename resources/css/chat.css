@@ -560,3 +560,7 @@ body.has-modal { overflow: hidden; }
 
 /* anti-bot trap: people never see or reach this field */
 .hp { position: absolute !important; left: -9999px; top: auto; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+
+.about .explore { margin-top: 14px; font-size: 12.5px; line-height: 1.8; color: var(--mut); }
+.about .explore a { color: #cfc8ff; text-decoration: none; }
+.about .explore a:hover { text-decoration: underline; }

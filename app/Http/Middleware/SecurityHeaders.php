@@ -24,7 +24,7 @@ class SecurityHeaders
             "media-src 'self'",
             "font-src 'self'",
             "connect-src 'self'",
-            "manifest-src 'none'",
+            "manifest-src 'self'",
             "base-uri 'none'",
             "form-action 'self'",
             "frame-ancestors 'none'",

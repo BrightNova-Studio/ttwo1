@@ -64,12 +64,12 @@
     ]
   },
   "resources/js/chat/main.js": {
-    "file": "assets/main-DpFWL-1c.js",
+    "file": "assets/main-Di0Q3VHg.js",
     "name": "main",
     "src": "resources/js/chat/main.js",
     "isEntry": true,
     "css": [
-      "assets/main-DlY-MdcW.css"
+      "assets/main-C1G3mXKu.css"
     ],
     "assets": [
       "assets/pow-worker-DNRN4zrh.js",

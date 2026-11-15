@@ -7,18 +7,19 @@
     <meta name="theme-color" content="#06060a">
     <meta name="referrer" content="no-referrer">
     @include('partials.seo', [
-        'seoTitle' => '1two1: Private Encrypted Chat Rooms for Two, No Signup',
-        'seoDesc' => 'Open a private, end-to-end encrypted chat room for two people in seconds. No account, no app, nothing saved. Temp rooms delete themselves, or meet someone new with Random connect.',
+        'seoTitle' => '1two1 (121): Secret Private Chat Rooms for Two, No Signup',
+        'seoDesc' => '1two1, also searched as 121: free secret one-to-one chat rooms for two people. End-to-end encrypted, no signup, no app. Temp rooms, or anonymous random chat.',
         'seoPath' => '/',
         'seoJson' => [
-            ['@context' => 'https://schema.org', '@type' => 'WebSite', 'name' => '1two1', 'url' => rtrim(config('app.url'), '/').'/', 'description' => 'Private, end-to-end encrypted chat rooms for exactly two people.'],
+            ['@context' => 'https://schema.org', '@type' => 'WebSite', 'name' => '1two1', 'alternateName' => ['121', 'One Two One', '1 2 1', '1two1 chat'], 'url' => rtrim(config('app.url'), '/').'/', 'description' => 'Private, end-to-end encrypted chat rooms for exactly two people.', 'inLanguage' => 'en'],
+            ['@context' => 'https://schema.org', '@type' => 'Organization', 'name' => '1two1', 'alternateName' => '121', 'url' => rtrim(config('app.url'), '/').'/', 'logo' => rtrim(config('app.url'), '/').'/icon-512.png', 'image' => rtrim(config('app.url'), '/').'/og.png', 'email' => config('chat.support_email')],
             ['@context' => 'https://schema.org', '@type' => 'WebApplication', 'name' => '1two1', 'url' => rtrim(config('app.url'), '/').'/', 'applicationCategory' => 'CommunicationApplication', 'operatingSystem' => 'Any (web browser)', 'browserRequirements' => 'Requires a modern browser with JavaScript and Web Crypto', 'inLanguage' => 'en', 'isAccessibleForFree' => true, 'offers' => ['@type' => 'Offer', 'price' => '0', 'priceCurrency' => 'USD'], 'featureList' => ['End-to-end encrypted (AES-256-GCM)', 'No account or app needed', 'Temp rooms that delete themselves 30 minutes after both people leave', 'Long-term rooms that last 30 days', 'Random connect with strangers', 'View-once and disappearing messages']],
         ],
     ])
     @foreach ($videoLd as $ld)
     <script type="application/ld+json">{!! json_encode($ld, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP) !!}</script>
     @endforeach
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    @include('partials.icons')
     @vite(['resources/js/chat/main.js'])
 </head>
 <body>
@@ -38,7 +39,7 @@
     <section class="card" aria-live="polite">
         <div class="brand">@include('partials.brand', ['u' => 'c'])</div>
 
-        <h1 id="gate-title">A secret room for two.</h1>
+        <h1 id="gate-title">1two1: a secret room for two.</h1>
         <p id="gate-sub" class="sub">End-to-end encrypted. No accounts, no cookies, nothing saved on this device.</p>
 
         <div id="gate-note" class="gate-note" hidden></div>
@@ -181,8 +182,8 @@
     @endif
 
     <section class="about" aria-labelledby="about-h">
-        <h2 id="about-h">Private chat rooms for two people</h2>
-        <p>1two1 gives two people a private place to talk, with no sign-up and nothing to install. Messages are end-to-end encrypted in your browser, so not even we can read them.</p>
+        <h2 id="about-h">1two1: secret chat rooms for two people</h2>
+        <p>1two1 (also written <b>121</b> or &ldquo;one two one&rdquo;) is a free one-to-one chat: a secret place for exactly two people to talk, with no sign-up and nothing to install. Messages are end-to-end encrypted in your browser, so not even we can read them.</p>
         <ul class="vcards">
             @foreach ($guides as $g)
                 <li class="vcard">
@@ -208,6 +209,7 @@
                 </li>
             @endforeach
         </ul>
+        <p class="explore">Learn more: <a href="/about-1two1">What is 1two1?</a> &middot; <a href="/secret-chat">Secret chat</a> &middot; <a href="/one-to-one-chat">One-to-one chat</a> &middot; <a href="/how-it-works">How it works</a></p>
     </section>
 
     <p class="support">Questions or something not working?

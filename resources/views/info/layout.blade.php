@@ -18,7 +18,7 @@
         ]], $extraJson ?? []);
     @endphp
     @include('partials.seo', ['seoTitle' => $seoTitle ?? ($crumb.' · 1two1'), 'seoDesc' => $seoDesc ?? 'Private, end-to-end encrypted chat rooms for two people.', 'seoPath' => $path, 'seoJson' => $ld])
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    @include('partials.icons')
     @vite(['resources/css/info.css'])
 </head>
 <body>
@@ -27,6 +27,7 @@
 <header class="top">
     <a class="brand" href="/" aria-label="1two1 home">@include('partials.brand', ['u' => 'i'])</a>
     <nav aria-label="Learn more">
+        <a href="/about-1two1" @class(['on' => request()->is('about-1two1')])>About 1two1</a>
         <a href="/private-chat-room" @class(['on' => request()->is('private-chat-room')])>Private chat</a>
         <a href="/temporary-chat-room" @class(['on' => request()->is('temporary-chat-room')])>Temporary</a>
         <a href="/anonymous-chat" @class(['on' => request()->is('anonymous-chat')])>Anonymous</a>
@@ -50,7 +51,7 @@
 
 <footer class="foot">
     <span>1two1 &middot; secret rooms for two</span>
-    <span><a href="/private-chat-room">Private chat room</a> &middot; <a href="/temporary-chat-room">Temporary chat</a> &middot; <a href="/anonymous-chat">Anonymous chat</a> &middot; <a href="/how-it-works">How it works</a> &middot; <a href="/temp-vs-long">Temp vs Long</a> &middot; <a href="/privacy">Privacy</a> &middot; <a href="/faq">FAQ</a> &middot; <a href="mailto:{{ $supportEmail }}">Contact</a></span>
+    <span><a href="/about-1two1">What is 1two1?</a> &middot; <a href="/private-chat-room">Private chat room</a> &middot; <a href="/secret-chat">Secret chat</a> &middot; <a href="/one-to-one-chat">121 chat</a> &middot; <a href="/temporary-chat-room">Temporary chat</a> &middot; <a href="/anonymous-chat">Anonymous chat</a> &middot; <a href="/how-it-works">How it works</a> &middot; <a href="/temp-vs-long">Temp vs Long</a> &middot; <a href="/privacy">Privacy</a> &middot; <a href="/faq">FAQ</a> &middot; <a href="mailto:{{ $supportEmail }}">Contact</a></span>
 </footer>
 </body>
 </html>

@@ -7,7 +7,7 @@
     <meta name="robots" content="noindex, nofollow, noarchive">
     <meta name="referrer" content="no-referrer">
     <title>@yield('title', 'Console') · 1two1</title>
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    @include('partials.icons')
     @vite(['resources/css/operator.css', 'resources/js/operator.js'])
 </head>
 <body>

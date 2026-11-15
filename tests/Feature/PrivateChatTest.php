@@ -667,7 +667,7 @@ class PrivateChatTest extends TestCase
         foreach ($xml->url as $u) {
             $all[] = (string) $u->loc;
         }
-        $this->assertCount(9, $all);
+        $this->assertCount(12, $all);
         foreach (['/', '/private-chat-room', '/temporary-chat-room', '/anonymous-chat', '/faq', '/privacy'] as $p) {
             $this->assertContains(rtrim(config('app.url'), '/').$p, $all);
         }
@@ -766,6 +766,24 @@ class PrivateChatTest extends TestCase
         $this->assertSame(\App\Support\Client::key('2401:4900:1cbd:da48:aaaa:1:2:3'), \App\Support\Client::key('2401:4900:1cbd:da48:ffff:9:9:9'));
         $this->assertNotSame(\App\Support\Client::key('2401:4900:1cbd:da48::1'), \App\Support\Client::key('2401:4900:1cbd:da49::1'));
         $this->assertSame('203.0.113.9', \App\Support\Client::key('203.0.113.9'));
+    }
+
+    public function test_brand_search_pages_icons_and_manifest_are_in_place(): void
+    {
+        foreach (['/about-1two1', '/secret-chat', '/one-to-one-chat'] as $p) {
+            $r = $this->get($p)->assertOk();
+            $this->assertStringContainsString('index', $r->headers->get('X-Robots-Tag'));
+            $this->assertStringNotContainsString('noindex', $r->headers->get('X-Robots-Tag'));
+            $r->assertSee('rel="canonical"', false)->assertSee('1two1', false);
+        }
+        $home = $this->get('/')->assertOk();
+        $home->assertSee('1two1 (121)', false)->assertSee('/favicon.ico', false)->assertSee('/apple-touch-icon.png', false)->assertSee('/site.webmanifest', false)->assertSee('alternateName', false)->assertSee('/icon-512.png', false);
+        foreach (['favicon.ico', 'favicon-48.png', 'favicon-96.png', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png', 'site.webmanifest'] as $f) {
+            $this->assertFileExists(public_path($f));
+            $this->assertGreaterThan(100, filesize(public_path($f)), $f.' must not be empty');
+        }
+        $icons = json_decode(file_get_contents(public_path('site.webmanifest')), true)['icons'];
+        $this->assertCount(3, $icons);
     }
 
     public function test_home_page_lists_the_how_to_videos_that_exist(): void
